@@ -53,7 +53,10 @@ import {
   Shield,
   Key,
   Edit3,
-  Loader2
+  Loader2,
+  Download,
+  CloudUpload,
+  HardDrive
 } from 'lucide-react';
 import { 
   AppConfig, 
@@ -357,6 +360,82 @@ export default function AdminPage() {
       setConfig(reset);
       setSaveToast(true);
       setTimeout(() => setSaveToast(false), 2500);
+    }
+  };
+
+  const [isSyncing, setIsSyncing] = useState<boolean>(false);
+  const [syncStatusMsg, setSyncStatusMsg] = useState<string>('');
+
+  const handleExportBackup = () => {
+    try {
+      const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(config, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute('href', dataStr);
+      const dateStr = new Date().toISOString().slice(0, 10);
+      downloadAnchor.setAttribute('download', `lichvannien-config-backup-${dateStr}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+      setSyncStatusMsg('Đã tải xuống file sao lưu cấu hình!');
+      setTimeout(() => setSyncStatusMsg(''), 3000);
+    } catch {
+      alert('Không thể tạo file sao lưu.');
+    }
+  };
+
+  const handleImportBackup = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const content = event.target?.result as string;
+        const parsed = JSON.parse(content);
+        if (!parsed || typeof parsed !== 'object') {
+          alert('Tệp sao lưu không đúng định dạng JSON!');
+          return;
+        }
+        const merged: AppConfig = {
+          ...DEFAULT_APP_CONFIG,
+          ...parsed,
+          branding: { ...DEFAULT_APP_CONFIG.branding, ...(parsed.branding || {}) },
+          donation: { ...DEFAULT_APP_CONFIG.donation, ...(parsed.donation || {}) },
+          system: { ...DEFAULT_APP_CONFIG.system, ...(parsed.system || {}) },
+          footer: { ...DEFAULT_APP_CONFIG.footer, ...(parsed.footer || {}) },
+          features: { ...DEFAULT_APP_CONFIG.features, ...(parsed.features || {}) },
+          users: Array.isArray(parsed.users) && parsed.users.length > 0 ? parsed.users : config.users,
+          isCustomized: true,
+          lastModified: Date.now(),
+        };
+        setConfig(merged);
+        saveStoredConfig(merged);
+        setSaveToast(true);
+        setTimeout(() => setSaveToast(false), 2500);
+        setSyncStatusMsg('Đã khôi phục cấu hình từ file sao lưu thành công!');
+        setTimeout(() => setSyncStatusMsg(''), 4000);
+        alert('Đã khôi phục thành công toàn bộ Logo, mã VietQR, tài khoản ngân hàng và cài đặt từ file sao lưu!');
+      } catch (err: any) {
+        alert('Lỗi đọc file: ' + (err?.message || 'Không thể đọc nội dung file sao lưu'));
+      } finally {
+        e.target.value = '';
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  const handleForceSyncServer = async () => {
+    setIsSyncing(true);
+    setSyncStatusMsg('Đang đồng bộ cấu hình lên máy chủ...');
+    try {
+      saveStoredConfig(config);
+      setSaveToast(true);
+      setTimeout(() => setSaveToast(false), 2500);
+      setSyncStatusMsg('Đã đồng bộ dữ liệu lên máy chủ thành công!');
+      setTimeout(() => setSyncStatusMsg(''), 3000);
+    } catch {
+      setSyncStatusMsg('Lỗi khi đồng bộ lên máy chủ');
+    } finally {
+      setIsSyncing(false);
     }
   };
 
@@ -749,13 +828,49 @@ export default function AdminPage() {
           </div>
 
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            {/* Nút Xuất Sao Lưu */}
+            <button
+              onClick={handleExportBackup}
+              className="px-2.5 sm:px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium rounded-lg transition-colors flex items-center gap-1"
+              title="Tải file sao lưu cấu hình (.json) chứa toàn bộ Logo, mã VietQR, tài khoản và cài đặt"
+            >
+              <Download className="w-3.5 h-3.5 text-blue-600" />
+              <span className="hidden sm:inline">Sao Lưu</span>
+            </button>
+
+            {/* Nút Nhập File Sao Lưu */}
+            <label
+              className="px-2.5 sm:px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium rounded-lg transition-colors flex items-center gap-1 cursor-pointer"
+              title="Khôi phục toàn bộ cấu hình, Logo, VietQR từ file .json đã sao lưu"
+            >
+              <Upload className="w-3.5 h-3.5 text-indigo-600" />
+              <span className="hidden sm:inline">Nhập File</span>
+              <input
+                type="file"
+                accept=".json,application/json"
+                className="hidden"
+                onChange={handleImportBackup}
+              />
+            </label>
+
+            {/* Nút Đồng Bộ Server */}
+            <button
+              onClick={handleForceSyncServer}
+              disabled={isSyncing}
+              className="px-2.5 sm:px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 text-xs font-medium rounded-lg transition-colors flex items-center gap-1"
+              title="Đẩy cấu hình hiện tại lên máy chủ ngay lập tức"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 text-amber-700 ${isSyncing ? 'animate-spin' : ''}`} />
+              <span className="hidden md:inline">Đồng Bộ</span>
+            </button>
+
             <button
               onClick={handleReset}
               className="px-2.5 sm:px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium rounded-lg transition-colors flex items-center gap-1"
               title="Khôi phục mặc định"
             >
               <RotateCcw className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Mặc định</span>
+              <span className="hidden lg:inline">Mặc định</span>
             </button>
 
             <button
@@ -768,6 +883,14 @@ export default function AdminPage() {
             </button>
           </div>
         </header>
+
+        {/* Thông báo thao tác sao lưu / đồng bộ */}
+        {syncStatusMsg && (
+          <div className="fixed top-16 right-5 z-50 bg-blue-900 text-white px-4 py-2 rounded-xl shadow-lg text-xs font-bold flex items-center gap-2 animate-fadeIn border border-blue-700">
+            <CheckCircle2 className="w-4 h-4 text-cyan-300" />
+            <span>{syncStatusMsg}</span>
+          </div>
+        )}
 
         {/* Thông báo Lưu Thành Công */}
         {saveToast && (
@@ -1827,6 +1950,64 @@ export default function AdminPage() {
                   <p className="text-[11px] text-slate-500">
                     💡 <strong>Mẹo:</strong> Bấm <strong>"▶ Chạy Thử Nghiệm Chu Trình"</strong> để xem banner đợi đủ số giây trễ (Delay), tự động xuất hiện với hiệu ứng đã chọn, và đếm ngược thời lượng hiển thị (Duration) trước khi tự động biến mất!
                   </p>
+                </div>
+
+                {/* 5. Quản Lý Sao Lưu & Lưu Trữ Bền Vững (Persistent Storage) */}
+                <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold">
+                        <HardDrive className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <h3 className="text-xs font-bold text-slate-900">Sao Lưu, Khôi Phục & Lưu Trữ Bền Vững (VPS Storage)</h3>
+                        <p className="text-[11px] text-slate-500">Bảo vệ vĩnh viễn Logo, mã QR VietQR và cấu hình không bị mất khi build lại trên VPS</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <button
+                      type="button"
+                      onClick={handleExportBackup}
+                      className="flex items-center justify-center gap-2 px-3 py-2.5 bg-white border border-slate-300 hover:border-blue-500 hover:bg-blue-50/50 rounded-lg text-xs font-bold text-slate-700 hover:text-blue-700 transition-colors shadow-2xs"
+                    >
+                      <Download className="w-4 h-4 text-blue-600" />
+                      <span>Xuất File Sao Lưu (.json)</span>
+                    </button>
+
+                    <label className="flex items-center justify-center gap-2 px-3 py-2.5 bg-white border border-slate-300 hover:border-indigo-500 hover:bg-indigo-50/50 rounded-lg text-xs font-bold text-slate-700 hover:text-indigo-700 transition-colors shadow-2xs cursor-pointer">
+                      <Upload className="w-4 h-4 text-indigo-600" />
+                      <span>Nhập File Khôi Phục (.json)</span>
+                      <input
+                        type="file"
+                        accept=".json,application/json"
+                        className="hidden"
+                        onChange={handleImportBackup}
+                      />
+                    </label>
+
+                    <button
+                      type="button"
+                      onClick={handleForceSyncServer}
+                      disabled={isSyncing}
+                      className="flex items-center justify-center gap-2 px-3 py-2.5 bg-amber-500 hover:bg-amber-600 rounded-lg text-xs font-bold text-slate-950 transition-colors shadow-2xs disabled:opacity-50"
+                    >
+                      <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
+                      <span>Đồng Bộ Cấu Hình Lên Server</span>
+                    </button>
+                  </div>
+
+                  <div className="p-3 bg-white border border-slate-200 rounded-lg text-xs text-slate-600 space-y-1.5 leading-relaxed">
+                    <div className="font-bold text-slate-800 flex items-center gap-1.5">
+                      <span>🛡️ Hướng dẫn tránh mất dữ liệu khi Deploy / Build trên VPS (Docker / Nixpacks):</span>
+                    </div>
+                    <ul className="list-disc list-inside space-y-1 text-[11px] text-slate-600">
+                      <li><strong>Tự động phục hồi (Auto-Heal):</strong> Hệ thống đã kích hoạt tính năng tự phát hiện máy chủ vừa build lại và tự động đẩy cấu hình từ trình duyệt của bạn lên khôi phục.</li>
+                      <li><strong>Sao lưu dự phòng 1 chạm:</strong> Bạn có thể bấm nút <em>"Xuất File Sao Lưu (.json)"</em> ở trên để lưu 1 bản cấu hình về máy tính/điện thoại bất kỳ lúc nào.</li>
+                      <li><strong>Gắn Persistent Volume (Khuyên dùng trên Panel VPS):</strong> Trong mục cấu hình Volume / Storage của Website trên Panel, bạn có thể tạo mount thư mục: <code className="bg-slate-100 text-slate-800 px-1 py-0.5 rounded font-mono font-bold">/app/data</code> (hoặc biến môi trường <code className="bg-slate-100 text-slate-800 px-1 py-0.5 rounded font-mono font-bold">DATA_DIR=/app/data</code>) để dữ liệu lưu vĩnh viễn trên ổ đĩa VPS mà không bao giờ mất qua các lần build.</li>
+                    </ul>
+                  </div>
                 </div>
               </div>
             </div>

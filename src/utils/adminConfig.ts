@@ -165,9 +165,13 @@ export interface AppConfig {
     bottomLinkText?: string;
   };
   users?: AdminUser[];
+  isCustomized?: boolean;
+  lastModified?: number;
 }
 
 export const DEFAULT_APP_CONFIG: AppConfig = {
+  isCustomized: false,
+  lastModified: 0,
   branding: {
     siteName: 'LỊCH VẠN NIÊN',
     tagline: 'Đại Việt Phong Thủy & Lịch Pháp',
@@ -356,6 +360,8 @@ export function getStoredConfig(): AppConfig {
         bottomLinkText: parsed.footer?.bottomLinkText !== undefined ? parsed.footer.bottomLinkText : DEFAULT_APP_CONFIG.footer.bottomLinkText,
       },
       users: storedUsers,
+      isCustomized: parsed.isCustomized ?? Boolean(parsed.branding?.logoUrl || (parsed.donation?.accountNumber && parsed.donation?.accountNumber !== DEFAULT_APP_CONFIG.donation.accountNumber)),
+      lastModified: parsed.lastModified || 0,
     };
   } catch {
     return DEFAULT_APP_CONFIG;
@@ -370,6 +376,8 @@ export function saveStoredConfig(config: AppConfig): void {
     );
     const normalizedConfig: AppConfig = {
       ...config,
+      isCustomized: true,
+      lastModified: Date.now(),
       system: {
         ...config.system,
         showAnnouncement: isAnnEnabled,
@@ -404,10 +412,11 @@ export function saveStoredConfig(config: AppConfig): void {
   }
 }
 
-// Hàm đồng bộ cấu hình từ server về thiết bị (loại bỏ hoàn toàn cache)
+// Hàm đồng bộ cấu hình từ server về thiết bị (loại bỏ hoàn toàn cache và tự động khôi phục nếu server vừa rebuild)
 export async function syncConfigFromServer(): Promise<AppConfig> {
   if (typeof window === 'undefined') return DEFAULT_APP_CONFIG;
   try {
+    const localConfig = getStoredConfig();
     const res = await fetch(`/api/config?_t=${Date.now()}`, {
       cache: 'no-store',
       headers: {
@@ -415,10 +424,33 @@ export async function syncConfigFromServer(): Promise<AppConfig> {
         'Cache-Control': 'no-cache',
       },
     });
-    if (!res.ok) return getStoredConfig();
+    if (!res.ok) return localConfig;
     const data = await res.json();
     if (data?.success && data?.config) {
       const serverConfig: AppConfig = data.config;
+
+      // KIỂM TRA BẢO VỆ DỮ LIỆU KHI MÁY CHỦ VỪA REBUILD / UP BUILD:
+      // Kiểm tra xem máy khách hiện tại có lưu logo hoặc thông tin QR tùy biến hay không
+      const hasLocalCustomData = Boolean(
+        localConfig.isCustomized ||
+        (localConfig.branding?.logoUrl && localConfig.branding.logoUrl.trim().length > 0) ||
+        (localConfig.donation?.accountNumber && localConfig.donation.accountNumber !== DEFAULT_APP_CONFIG.donation.accountNumber)
+      );
+
+      // Kiểm tra xem máy chủ có phải vừa khởi tạo từ mã nguồn mặc định (chưa có logo, số tk là mặc định) hay không
+      const isServerEmptyOrDefault = !serverConfig.isCustomized &&
+        (!serverConfig.branding?.logoUrl || serverConfig.branding.logoUrl.trim().length === 0) &&
+        (!serverConfig.donation?.accountNumber || serverConfig.donation.accountNumber === DEFAULT_APP_CONFIG.donation.accountNumber);
+
+      // Trường hợp 1: Máy chủ vừa rebuild (bị reset về mặc định), nhưng trình duyệt có dữ liệu thật (Logo, QR):
+      // -> Tự động khôi phục ngược cấu hình từ trình duyệt lên máy chủ, ngăn chặn việc xoá mất thông tin!
+      if (hasLocalCustomData && isServerEmptyOrDefault) {
+        console.info('[Lịch Vạn Niên] Phát hiện máy chủ vừa khởi tạo sau khi build. Đang tự động khôi phục cấu hình từ trình duyệt lên máy chủ...');
+        saveStoredConfig(localConfig);
+        return localConfig;
+      }
+
+      // Trường hợp 2: Máy chủ có cấu hình hợp lệ hoặc người dùng chưa tùy biến:
       localStorage.setItem(STORAGE_KEY, JSON.stringify(serverConfig));
       window.dispatchEvent(new Event('app-config-updated'));
       return serverConfig;
@@ -441,7 +473,7 @@ export function resetStoredConfig(): AppConfig {
         'Pragma': 'no-cache',
         'Cache-Control': 'no-cache',
       },
-      body: JSON.stringify(DEFAULT_APP_CONFIG),
+      body: JSON.stringify({ ...DEFAULT_APP_CONFIG, isCustomized: false, lastModified: Date.now() }),
       cache: 'no-store',
     }).catch(() => {});
   }
