@@ -52,7 +52,8 @@ import {
   UserPlus,
   Shield,
   Key,
-  Edit3
+  Edit3,
+  Loader2
 } from 'lucide-react';
 import { 
   AppConfig, 
@@ -67,6 +68,7 @@ import {
   AdminUser,
   UserRole
 } from '@/utils/adminConfig';
+import { optimizeLogoImage, formatFileSize } from '@/utils/imageOptimizer';
 import TopAnnouncementBanner from '@/components/TopAnnouncementBanner';
 
 type AdminTab = 'features' | 'branding' | 'donation' | 'contact_footer' | 'system' | 'users';
@@ -122,6 +124,13 @@ export default function AdminPage() {
   const [formStatus, setFormStatus] = useState<'active' | 'blocked'>('active');
   const [formError, setFormError] = useState<string>('');
   const [userSearch, setUserSearch] = useState<string>('');
+  const [isOptimizingLogo, setIsOptimizingLogo] = useState<boolean>(false);
+  const [logoOptimizedInfo, setLogoOptimizedInfo] = useState<{
+    originalSize: string;
+    optimizedSize: string;
+    dimensions: string;
+    ratio: string;
+  } | null>(null);
 
   useEffect(() => {
     const loaded = getStoredConfig();
@@ -371,32 +380,42 @@ export default function AdminPage() {
     setTimeout(() => setCopiedField(null), 2000);
   };
 
-  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 2 * 1024 * 1024) {
-      alert('Vui lòng chọn ảnh logo có dung lượng dưới 2MB!');
-      return;
-    }
+    setIsOptimizingLogo(true);
+    try {
+      // Tự động thu phóng và nén ảnh sắc nét (không giới hạn dung lượng tải lên)
+      const result = await optimizeLogoImage(file, 512, 0.88);
+      setConfig((prev) => ({
+        ...prev,
+        branding: {
+          ...prev.branding,
+          logoUrl: result.dataUrl,
+        },
+      }));
 
-    const reader = new FileReader();
-    reader.onload = (uploadEvent) => {
-      const result = uploadEvent.target?.result as string;
-      if (result) {
-        setConfig((prev) => ({
-          ...prev,
-          branding: {
-            ...prev.branding,
-            logoUrl: result,
-          },
-        }));
-      }
-    };
-    reader.readAsDataURL(file);
+      const savedPercent = Math.round(
+        Math.max(0, (1 - result.optimizedSize / Math.max(result.originalSize, 1)) * 100)
+      );
+
+      setLogoOptimizedInfo({
+        originalSize: formatFileSize(result.originalSize),
+        optimizedSize: formatFileSize(result.optimizedSize),
+        dimensions: `${result.width}x${result.height}px`,
+        ratio: savedPercent > 0 ? `-${savedPercent}%` : 'Chuẩn hóa',
+      });
+    } catch (err: any) {
+      alert(err.message || 'Không thể xử lý ảnh, vui lòng thử lại ảnh khác.');
+    } finally {
+      setIsOptimizingLogo(false);
+      e.target.value = '';
+    }
   };
 
   const handleRemoveLogo = () => {
+    setLogoOptimizedInfo(null);
     setConfig((prev) => ({
       ...prev,
       branding: {
@@ -925,22 +944,34 @@ export default function AdminPage() {
                   {/* Actions & Instructions */}
                   <div className="flex-1 space-y-2.5">
                     <div className="flex flex-wrap items-center gap-2">
-                      <label className="cursor-pointer px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-lg transition-colors inline-flex items-center gap-1.5 shadow-2xs">
-                        <Upload className="w-3.5 h-3.5" />
-                        <span>{config.branding.logoUrl ? 'Thay đổi ảnh logo...' : 'Tải lên ảnh logo...'}</span>
+                      <label className={`cursor-pointer px-3.5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl transition-all inline-flex items-center gap-1.5 shadow-2xs ${
+                        isOptimizingLogo ? 'opacity-70 pointer-events-none' : ''
+                      }`}>
+                        {isOptimizingLogo ? (
+                          <>
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            <span>Đang xử lý & tối ưu ảnh...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="w-3.5 h-3.5" />
+                            <span>{config.branding.logoUrl ? 'Thay đổi ảnh logo...' : 'Tải lên ảnh logo...'}</span>
+                          </>
+                        )}
                         <input
                           type="file"
-                          accept="image/png, image/jpeg, image/webp, image/svg+xml"
+                          accept="image/*"
+                          disabled={isOptimizingLogo}
                           onChange={handleLogoUpload}
                           className="hidden"
                         />
                       </label>
 
-                      {config.branding.logoUrl && (
+                      {config.branding.logoUrl && !isOptimizingLogo && (
                         <button
                           type="button"
                           onClick={handleRemoveLogo}
-                          className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs rounded-lg border border-rose-200 transition-colors inline-flex items-center gap-1"
+                          className="px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs rounded-xl border border-rose-200 transition-colors inline-flex items-center gap-1"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                           <span>Xóa ảnh (Dùng chữ)</span>
@@ -948,8 +979,17 @@ export default function AdminPage() {
                       )}
                     </div>
 
+                    {logoOptimizedInfo && (
+                      <div className="p-2.5 bg-emerald-50 border border-emerald-200 rounded-lg flex items-center gap-2 text-[11px] text-emerald-800 animate-fadeIn">
+                        <Sparkles className="w-4 h-4 text-emerald-600 shrink-0" />
+                        <span>
+                          <strong>Đã tối ưu tự động:</strong> Giảm từ <span className="font-mono">{logoOptimizedInfo.originalSize}</span> ➔ <strong className="font-mono">{logoOptimizedInfo.optimizedSize}</strong> ({logoOptimizedInfo.ratio}) • Phân giải: {logoOptimizedInfo.dimensions}
+                        </span>
+                      </div>
+                    )}
+
                     <p className="text-[11px] text-slate-500 leading-relaxed">
-                      💡 <strong>Gợi ý:</strong> Chọn file ảnh <span className="font-semibold text-slate-700">PNG, JPG, WebP, SVG</span> vuông (tỉ lệ 1:1), dung lượng tối đa 2MB. Logo sẽ tự động cập nhật ngay trên toàn bộ giao diện Header, Sidebar và Trang đăng nhập.
+                      ⚡ <strong>Không giới hạn dung lượng:</strong> Tự do chọn mọi tệp ảnh (PNG, JPG, WebP, SVG... kể cả ảnh gốc 5MB, 10MB, 20MB+). Hệ thống tự động thu phóng và nén ảnh (WebP/PNG sắc nét, giữ nguyên nền trong suốt) giúp website tải siêu nhanh và ổn định tuyệt đối.
                     </p>
                   </div>
                 </div>
