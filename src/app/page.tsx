@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Header, { ActiveTab } from '@/components/Header';
 import Footer from '@/components/Footer';
 import CalendarMonth from '@/components/CalendarMonth';
@@ -14,10 +14,16 @@ import SaoHanViewer from '@/components/SaoHanViewer';
 import GieoQueViewer from '@/components/GieoQueViewer';
 import ThuocLoBanViewer from '@/components/ThuocLoBanViewer';
 import AboutUsViewer from '@/components/AboutUsViewer';
+import { syncConfigFromServer } from '@/utils/adminConfig';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('calendar');
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+
+  useEffect(() => {
+    // Luôn fetch cấu hình server mới nhất khi tải trang trên mọi thiết bị
+    syncConfigFromServer();
+  }, []);
 
   const handleSelectDateFromChild = (date: Date) => {
     setSelectedDate(date);

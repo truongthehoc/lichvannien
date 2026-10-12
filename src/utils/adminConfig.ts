@@ -378,17 +378,68 @@ export function saveStoredConfig(config: AppConfig): void {
       },
       users: Array.isArray(config.users) && config.users.length > 0 ? config.users : DEFAULT_APP_CONFIG.users,
     };
+    // 1. Lưu ngay vào localStorage thiết bị hiện tại
     localStorage.setItem(STORAGE_KEY, JSON.stringify(normalizedConfig));
     window.dispatchEvent(new Event('app-config-updated'));
+
+    // 2. Đồng bộ lên Server VPS để tất cả thiết bị khác (Mobile, máy tính khác) đều nhận dữ liệu mới ngay lập tức
+    fetch('/api/config', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Pragma': 'no-cache',
+        'Cache-Control': 'no-cache',
+      },
+      body: JSON.stringify(normalizedConfig),
+      cache: 'no-store',
+    }).catch((err) => {
+      console.warn('Lỗi khi đồng bộ cấu hình lên server:', err);
+    });
   } catch (e) {
     console.error('Lỗi khi lưu cấu hình admin:', e);
   }
+}
+
+// Hàm đồng bộ cấu hình từ server về thiết bị (loại bỏ hoàn toàn cache)
+export async function syncConfigFromServer(): Promise<AppConfig> {
+  if (typeof window === 'undefined') return DEFAULT_APP_CONFIG;
+  try {
+    const res = await fetch(`/api/config?_t=${Date.now()}`, {
+      cache: 'no-store',
+      headers: {
+        'Pragma': 'no-cache',
+        'Cache-Control': 'no-cache',
+      },
+    });
+    if (!res.ok) return getStoredConfig();
+    const data = await res.json();
+    if (data?.success && data?.config) {
+      const serverConfig: AppConfig = data.config;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(serverConfig));
+      window.dispatchEvent(new Event('app-config-updated'));
+      return serverConfig;
+    }
+  } catch (err) {
+    console.warn('Không thể đồng bộ cấu hình từ server:', err);
+  }
+  return getStoredConfig();
 }
 
 export function resetStoredConfig(): AppConfig {
   if (typeof window !== 'undefined') {
     localStorage.removeItem(STORAGE_KEY);
     window.dispatchEvent(new Event('app-config-updated'));
+
+    fetch('/api/config', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Pragma': 'no-cache',
+        'Cache-Control': 'no-cache',
+      },
+      body: JSON.stringify(DEFAULT_APP_CONFIG),
+      cache: 'no-store',
+    }).catch(() => {});
   }
   return DEFAULT_APP_CONFIG;
 }

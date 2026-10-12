@@ -18,6 +18,9 @@ export default function RootLayout({
     <html lang="vi">
       <head>
         <link rel="icon" href="/favicon.ico" />
+        <meta httpEquiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+        <meta httpEquiv="Pragma" content="no-cache" />
+        <meta httpEquiv="Expires" content="0" />
       </head>
       <body className="min-h-screen flex flex-col bg-[#fcfaf5] text-[#2c1d11] relative">
         <DynamicBrandHead />

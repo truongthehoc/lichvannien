@@ -61,6 +61,7 @@ import {
   getStoredConfig, 
   saveStoredConfig, 
   resetStoredConfig,
+  syncConfigFromServer,
   VIETNAM_BANKS,
   getVietQrUrl,
   AnnouncementEffect,
@@ -135,6 +136,9 @@ export default function AdminPage() {
   useEffect(() => {
     const loaded = getStoredConfig();
     setConfig(loaded);
+    syncConfigFromServer().then((remote) => {
+      if (remote) setConfig(remote);
+    });
     if (typeof window !== 'undefined' && sessionStorage.getItem('lichvannien_admin_unlocked') === 'true') {
       setIsAuthenticated(true);
       const savedUserStr = sessionStorage.getItem('lichvannien_admin_user');

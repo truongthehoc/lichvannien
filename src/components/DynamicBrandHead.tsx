@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { getStoredConfig } from '@/utils/adminConfig';
+import { getStoredConfig, syncConfigFromServer } from '@/utils/adminConfig';
 
 export default function DynamicBrandHead() {
   useEffect(() => {
@@ -46,9 +46,34 @@ export default function DynamicBrandHead() {
       }
     };
 
+    // 1. Cập nhật ngay từ cache local
     updateFaviconAndMeta();
+
+    // 2. Luôn đồng bộ ngay lập tức cấu hình mới nhất từ server khi mở trang
+    syncConfigFromServer().then(() => updateFaviconAndMeta());
+
+    // 3. Tự động kiểm tra cấu hình mới khi người dùng quay lại tab/app trên mobile
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        syncConfigFromServer();
+      }
+    };
+
     window.addEventListener('app-config-updated', updateFaviconAndMeta);
-    return () => window.removeEventListener('app-config-updated', updateFaviconAndMeta);
+    window.addEventListener('focus', handleVisibilityChange);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // 4. Định kỳ kiểm tra mỗi 30 giây để cập nhật đồng bộ xuyên suốt
+    const intervalId = setInterval(() => {
+      syncConfigFromServer();
+    }, 30000);
+
+    return () => {
+      window.removeEventListener('app-config-updated', updateFaviconAndMeta);
+      window.removeEventListener('focus', handleVisibilityChange);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      clearInterval(intervalId);
+    };
   }, []);
 
   return null;

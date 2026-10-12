@@ -1,0 +1,91 @@
+{
+  "branding": {
+    "siteName": "LỊCH VẠN NIÊN",
+    "tagline": "Đại Việt Phong Thủy & Lịch Pháp",
+    "logoText": "ÂD"
+  },
+  "aboutIntro": {
+    "badge": "Tinh Hoa Văn Hóa Việt",
+    "title": "LỊCH VẠN NIÊN",
+    "description": "Dự án phi lợi nhuận với tâm nguyện gìn giữ, chuẩn hóa và số hóa kho tàng Lịch Pháp, Phong Thủy và Chiêm Tinh cổ truyền Việt Nam trên nền tảng công nghệ hiện đại. Áp dụng giải thuật thiên văn chuẩn xác của nhà nghiên cứu Hồ Ngọc Đức (múi giờ GMT+7 Việt Nam).",
+    "quote": "Văn hóa là hồn cốt của Dân tộc, còn văn hóa là còn dân tộc."
+  },
+  "features": {
+    "calendar": true,
+    "tuvihangngay": true,
+    "convert": true,
+    "ngaytot": true,
+    "tuvi": true,
+    "saohan": true,
+    "thansohoc": true,
+    "gieoque": true,
+    "thuocloban": true,
+    "about": true
+  },
+  "donation": {
+    "bankCode": "MB",
+    "bankName": "MB Bank (Quân Đội)",
+    "accountNumber": "0988888888",
+    "accountHolder": "NGUYEN VAN A",
+    "branch": "Hà Nội",
+    "content": "Ủng hộ dự án Lịch Vạn Niên",
+    "momoNumber": "0988888888",
+    "qrTemplate": "compact2",
+    "packages": [
+      { "amount": 20000, "label": "Ly Cà Phê", "desc": "Tiếp thêm năng lượng làm việc" },
+      { "amount": 50000, "label": "Bữa Cơm Trưa", "desc": "Đồng hành duy trì máy chủ" },
+      { "amount": 100000, "label": "Tấm Lòng Vàng", "desc": "Ủng hộ phát triển tính năng mới" },
+      { "amount": 200000, "label": "Đại Thí Chủ", "desc": "Bảo trợ duy trì tên miền lâu dài" }
+    ]
+  },
+  "contact": {
+    "email": "lienhe@lichvannien.vn",
+    "hotline": "1900 6868",
+    "address": "Hà Nội, Việt Nam"
+  },
+  "system": {
+    "version": "v1.2.0",
+    "releaseDate": "12/10/2026",
+    "latestHighlights": "Đồng bộ hóa cấu hình máy chủ thời gian thực (Realtime Sync & No-Cache)\nTối ưu hóa toàn diện giao diện di động (Mobile First & Touch Drawer)\nHỗ trợ upload logo không giới hạn dung lượng với công nghệ nén ảnh WebP thông minh\nQuản lý người dùng và phân quyền quản trị Admin / Quản lý",
+    "announcement": "Chào mừng bạn đến với Lịch Vạn Niên Đại Việt - Nền tảng tra cứu Lịch Pháp & Phong Thủy cổ truyền!",
+    "showAnnouncement": true,
+    "announcementSettings": {
+      "text": "Chào mừng bạn đến với Lịch Vạn Niên Đại Việt - Nền tảng tra cứu Lịch Pháp & Phong Thủy cổ truyền!",
+      "enabled": true,
+      "effect": "slide_down",
+      "theme": "gold",
+      "delaySeconds": 0,
+      "durationSeconds": 0,
+      "allowClose": true
+    },
+    "maintenanceMode": false
+  },
+  "footer": {
+    "title": "LỊCH VẠN NIÊN ĐẠI VIỆT",
+    "description": "Kho tàng Lịch Pháp, Phong Thủy, Tử Vi và Chiêm Tinh cổ truyền Việt Nam.",
+    "versionDescription": "Phiên bản được chuẩn hóa thuật toán thiên văn Hồ Ngọc Đức, bảo tồn trọn vẹn văn hóa cổ truyền Việt Nam.",
+    "copyright": "Bản quyền thuộc về Dự Án Lịch Vạn Niên Đại Việt © 2026. Mọi quyền được bảo lưu.",
+    "loveMessage": "Phát triển với tâm huyết gìn giữ tinh hoa văn hóa truyền thống",
+    "bottomLinkText": "Tiếp thêm động lực cho tôi !"
+  },
+  "users": [
+    {
+      "id": "admin-1",
+      "username": "admin",
+      "password": "admin888",
+      "fullName": "Quản Trị Viên Tối Cao",
+      "role": "admin",
+      "status": "active",
+      "createdAt": "2026-10-06"
+    },
+    {
+      "id": "manager-1",
+      "username": "quanly",
+      "password": "quanly123",
+      "fullName": "Biên Tập Viên & Quản Lý",
+      "role": "manager",
+      "status": "active",
+      "createdAt": "2026-10-12"
+    }
+  ]
+}
