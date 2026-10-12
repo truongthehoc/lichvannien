@@ -348,7 +348,11 @@ export function getStoredConfig(): AppConfig {
       footer: { 
         ...DEFAULT_APP_CONFIG.footer, 
         ...(parsed.footer || {}),
-        versionDescription: parsed.footer?.versionDescription || DEFAULT_APP_CONFIG.footer.versionDescription,
+        title: parsed.footer?.title !== undefined ? parsed.footer.title : DEFAULT_APP_CONFIG.footer.title,
+        description: parsed.footer?.description !== undefined ? parsed.footer.description : DEFAULT_APP_CONFIG.footer.description,
+        versionDescription: parsed.footer?.versionDescription !== undefined ? parsed.footer.versionDescription : DEFAULT_APP_CONFIG.footer.versionDescription,
+        copyright: parsed.footer?.copyright !== undefined ? parsed.footer.copyright : DEFAULT_APP_CONFIG.footer.copyright,
+        loveMessage: parsed.footer?.loveMessage !== undefined ? parsed.footer.loveMessage : DEFAULT_APP_CONFIG.footer.loveMessage,
         bottomLinkText: parsed.footer?.bottomLinkText !== undefined ? parsed.footer.bottomLinkText : DEFAULT_APP_CONFIG.footer.bottomLinkText,
       },
       users: storedUsers,

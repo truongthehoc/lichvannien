@@ -105,9 +105,11 @@ export default function Footer({ onNavigateTab }: FooterProps) {
                 {config.system.version ? `Phiên bản: ${config.system.version}` : 'Chuẩn Xác & Miễn Phí'}
               </h4>
             </div>
-            <p className="text-sm leading-relaxed text-amber-200/70 mb-3">
-              {config.footer.versionDescription || 'Ứng dụng áp dụng giải thuật thiên văn Hồ Ngọc Đức múi giờ chuẩn GMT+7 Việt Nam, tương thích hoàn hảo trên mọi thiết bị máy tính và điện thoại.'}
-            </p>
+            {config.footer.versionDescription ? (
+              <p className="text-sm leading-relaxed text-amber-200/70 mb-3">
+                {config.footer.versionDescription}
+              </p>
+            ) : null}
             <div className="text-xs text-amber-400/80 mb-2">
               {config.footer.copyright || `© ${new Date().getFullYear()} Lịch Vạn Niên Đại Việt. Lưu giữ nét đẹp văn hóa Việt.`}
             </div>

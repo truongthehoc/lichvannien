@@ -1371,7 +1371,7 @@ export default function AdminPage() {
                   <label className="block text-xs font-bold text-slate-700 mb-1">Mô Tả Phiên Bản Ở Chân Trang (Cột 3)</label>
                   <textarea
                     rows={2}
-                    value={config.footer.versionDescription || ''}
+                    value={config.footer.versionDescription ?? ''}
                     onChange={(e) => setConfig({ ...config, footer: { ...config.footer, versionDescription: e.target.value } })}
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:bg-white focus:outline-none focus:border-amber-500 leading-relaxed"
                     placeholder="Ứng dụng áp dụng giải thuật thiên văn Hồ Ngọc Đức múi giờ chuẩn GMT+7 Việt Nam, tương thích hoàn hảo trên mọi thiết bị máy tính và điện thoại."

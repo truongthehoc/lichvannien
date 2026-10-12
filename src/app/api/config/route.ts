@@ -34,7 +34,11 @@ function readServerConfig(): AppConfig {
             ...(parsed.system?.announcementSettings || {}),
           },
         },
-        footer: { ...DEFAULT_APP_CONFIG.footer, ...(parsed.footer || {}) },
+        footer: {
+          ...DEFAULT_APP_CONFIG.footer,
+          ...(parsed.footer || {}),
+          versionDescription: parsed.footer?.versionDescription !== undefined ? parsed.footer.versionDescription : DEFAULT_APP_CONFIG.footer.versionDescription,
+        },
         users: Array.isArray(parsed.users) && parsed.users.length > 0 ? parsed.users : DEFAULT_APP_CONFIG.users,
       };
     }
@@ -83,6 +87,11 @@ export async function POST(request: NextRequest) {
     const updatedConfig: AppConfig = {
       ...current,
       ...body,
+      footer: {
+        ...current.footer,
+        ...(body.footer || {}),
+        versionDescription: body.footer?.versionDescription !== undefined ? body.footer.versionDescription : current.footer?.versionDescription,
+      },
       system: {
         ...current.system,
         ...(body.system || {}),
