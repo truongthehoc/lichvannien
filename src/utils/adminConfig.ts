@@ -430,27 +430,39 @@ export async function syncConfigFromServer(): Promise<AppConfig> {
       const serverConfig: AppConfig = data.config;
 
       // KIỂM TRA BẢO VỆ DỮ LIỆU KHI MÁY CHỦ VỪA REBUILD / UP BUILD:
-      // Kiểm tra xem máy khách hiện tại có lưu logo hoặc thông tin QR tùy biến hay không
+      const defaultUsersJson = JSON.stringify(DEFAULT_APP_CONFIG.users || []);
+      const localUsersJson = JSON.stringify(localConfig.users || []);
+      const serverUsersJson = JSON.stringify(serverConfig.users || []);
+
+      // Kiểm tra xem máy khách hiện tại có lưu logo, QR tùy biến hoặc đã đổi mật khẩu/thêm người dùng hay không
       const hasLocalCustomData = Boolean(
         localConfig.isCustomized ||
         (localConfig.branding?.logoUrl && localConfig.branding.logoUrl.trim().length > 0) ||
-        (localConfig.donation?.accountNumber && localConfig.donation.accountNumber !== DEFAULT_APP_CONFIG.donation.accountNumber)
+        (localConfig.donation?.accountNumber && localConfig.donation.accountNumber !== DEFAULT_APP_CONFIG.donation.accountNumber) ||
+        (localUsersJson !== defaultUsersJson)
       );
 
-      // Kiểm tra xem máy chủ có phải vừa khởi tạo từ mã nguồn mặc định (chưa có logo, số tk là mặc định) hay không
+      // Kiểm tra xem máy chủ có phải vừa khởi tạo từ mã nguồn mặc định hay không
       const isServerEmptyOrDefault = !serverConfig.isCustomized &&
         (!serverConfig.branding?.logoUrl || serverConfig.branding.logoUrl.trim().length === 0) &&
-        (!serverConfig.donation?.accountNumber || serverConfig.donation.accountNumber === DEFAULT_APP_CONFIG.donation.accountNumber);
+        (!serverConfig.donation?.accountNumber || serverConfig.donation.accountNumber === DEFAULT_APP_CONFIG.donation.accountNumber) &&
+        (serverUsersJson === defaultUsersJson);
 
-      // Trường hợp 1: Máy chủ vừa rebuild (bị reset về mặc định), nhưng trình duyệt có dữ liệu thật (Logo, QR):
-      // -> Tự động khôi phục ngược cấu hình từ trình duyệt lên máy chủ, ngăn chặn việc xoá mất thông tin!
+      // Trường hợp 1: Máy chủ vừa rebuild (bị reset về mặc định), nhưng trình duyệt có dữ liệu thật (Logo, QR, Mật khẩu đã đổi):
+      // -> Tự động khôi phục ngược cấu hình từ trình duyệt lên máy chủ, bảo toàn mật khẩu và cài đặt!
       if (hasLocalCustomData && isServerEmptyOrDefault) {
-        console.info('[Lịch Vạn Niên] Phát hiện máy chủ vừa khởi tạo sau khi build. Đang tự động khôi phục cấu hình từ trình duyệt lên máy chủ...');
+        console.info('[Lịch Vạn Niên] Phát hiện máy chủ vừa khởi tạo sau khi build. Đang tự động khôi phục cấu hình & tài khoản từ trình duyệt lên máy chủ...');
         saveStoredConfig(localConfig);
         return localConfig;
       }
 
-      // Trường hợp 2: Máy chủ có cấu hình hợp lệ hoặc người dùng chưa tùy biến:
+      // Trường hợp 2: Nếu server bị reset về users mặc định nhưng local đã đổi mật khẩu, giữ nguyên mật khẩu tùy biến:
+      if (localUsersJson !== defaultUsersJson && serverUsersJson === defaultUsersJson) {
+        serverConfig.users = localConfig.users;
+        serverConfig.isCustomized = true;
+      }
+
+      // Cập nhật cấu hình hợp lệ vào localStorage
       localStorage.setItem(STORAGE_KEY, JSON.stringify(serverConfig));
       window.dispatchEvent(new Event('app-config-updated'));
       return serverConfig;

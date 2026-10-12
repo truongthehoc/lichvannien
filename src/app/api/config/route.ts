@@ -134,6 +134,7 @@ export async function POST(request: NextRequest) {
           ...(body.system?.announcementSettings || {}),
         },
       },
+      users: Array.isArray(body.users) && body.users.length > 0 ? body.users : current.users,
     };
 
     const saved = writeServerConfig(updatedConfig);
