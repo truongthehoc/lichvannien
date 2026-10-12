@@ -236,8 +236,25 @@ export default function TuViViewer() {
               </button>
             </div>
 
+            {/* Thiên Bàn Card dành riêng cho Mobile */}
+            <div className="md:hidden p-4 bg-gradient-to-br from-amber-50 to-orange-100/70 rounded-xl border-2 border-amber-500/60 shadow-xs space-y-2.5">
+              <div className="font-serif font-bold text-[#8b1818] text-base border-b border-amber-300 pb-1.5 text-center">
+                THIÊN BÀN TỬ VI
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div><span className="text-stone-500">Họ tên:</span> <strong className="text-stone-900 block">{laSo.hoTen}</strong></div>
+                <div><span className="text-stone-500">Giới tính:</span> <strong className="text-stone-900 block">{laSo.gioiTinh} ({laSo.amDuongNamNu})</strong></div>
+                <div><span className="text-stone-500">Bản Mệnh:</span> <strong className="text-red-700 block">{laSo.menh}</strong></div>
+                <div><span className="text-stone-500">Cục:</span> <strong className="text-amber-800 block">{laSo.cuc}</strong></div>
+                <div><span className="text-stone-500">Chủ Mệnh:</span> <strong className="text-stone-800 block">{laSo.chuMenh}</strong></div>
+                <div><span className="text-stone-500">Chủ Thân:</span> <strong className="text-stone-800 block">{laSo.chuThan}</strong></div>
+                <div><span className="text-stone-500">Mệnh Cư:</span> <strong className="text-stone-800 block">{laSo.cungMenhChi}</strong></div>
+                <div><span className="text-stone-500">Thân Cư:</span> <strong className="text-stone-800 block">{laSo.cungThanChi}</strong></div>
+              </div>
+            </div>
+
             {/* Traditional 4x4 Board Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3">
               {/* Row 1: Tỵ(5), Ngọ(6), Mùi(7), Thân(8) */}
               {renderCungCell(5)}
               {renderCungCell(6)}

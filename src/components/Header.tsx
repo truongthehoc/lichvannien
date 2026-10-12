@@ -13,7 +13,9 @@ import {
   ChevronDown,
   Layers,
   Sparkle,
-  Heart
+  Heart,
+  Menu,
+  X
 } from 'lucide-react';
 import { AppConfig, DEFAULT_APP_CONFIG, getStoredConfig } from '@/utils/adminConfig';
 import TopAnnouncementBanner from '@/components/TopAnnouncementBanner';
@@ -42,6 +44,7 @@ interface NavGroup {
 
 export default function Header({ activeTab, setActiveTab }: HeaderProps) {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [config, setConfig] = useState<AppConfig>(DEFAULT_APP_CONFIG);
   const [mounted, setMounted] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -221,11 +224,11 @@ export default function Header({ activeTab, setActiveTab }: HeaderProps) {
                 {config.branding.logoText || 'ÂD'}
               </div>
             )}
-            <div className="hidden sm:block">
-              <h1 className="text-base lg:text-lg font-serif font-bold tracking-wide text-amber-200 leading-tight whitespace-nowrap">
+            <div className="min-w-0">
+              <h1 className="text-sm sm:text-base lg:text-lg font-serif font-bold tracking-wide text-amber-200 leading-tight truncate max-w-[160px] sm:max-w-none">
                 {config.branding.siteName || 'LỊCH VẠN NIÊN'}
               </h1>
-              <p className="text-[10px] text-amber-100/75 tracking-wider leading-none whitespace-nowrap">
+              <p className="hidden xs:block text-[9px] sm:text-[10px] text-amber-100/75 tracking-wider leading-none truncate max-w-[160px] sm:max-w-none">
                 {config.branding.tagline || 'Đại Việt Phong Thủy & Lịch Pháp'}
               </p>
             </div>
@@ -330,17 +333,28 @@ export default function Header({ activeTab, setActiveTab }: HeaderProps) {
               })}
             </nav>
           </div>
+
+          {/* Mobile Drawer Trigger Button */}
+          <button
+            type="button"
+            onClick={() => setMobileDrawerOpen(true)}
+            className="lg:hidden flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-950/50 hover:bg-red-950 text-amber-200 border border-amber-400/30 text-xs font-bold active:scale-95 transition-all shadow-xs shrink-0"
+            title="Xem tất cả tính năng"
+          >
+            <Menu className="w-4 h-4 text-amber-300" />
+            <span className="hidden xs:inline">Tính Năng</span>
+          </button>
         </div>
 
         {/* Mobile / Tablet Horizontal Menu Bar */}
-        <div className={`lg:hidden flex items-center gap-1.5 overflow-x-auto pb-2.5 pt-0.5 scrollbar-none no-scrollbar transition-opacity duration-150 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
+        <div className={`lg:hidden flex items-center gap-1.5 overflow-x-auto pb-2.5 pt-0.5 px-0.5 scrollbar-none no-scrollbar touch-pan-x transition-opacity duration-150 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
           {mounted && mobileNavItems.map((item) => {
             const isActive = activeTab === item.id;
             return (
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
-                className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap shrink-0 transition-all ${
+                className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap shrink-0 transition-all active:scale-95 ${
                   isActive
                     ? 'bg-amber-400 text-red-950 font-bold shadow'
                     : 'bg-red-900/60 text-amber-100 hover:bg-red-900'
@@ -353,6 +367,118 @@ export default function Header({ activeTab, setActiveTab }: HeaderProps) {
           })}
         </div>
       </div>
+
+      {/* Mobile Drawer Sheet */}
+      {mobileDrawerOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden flex justify-end animate-fadeIn">
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity"
+            onClick={() => setMobileDrawerOpen(false)}
+          />
+
+          {/* Drawer Panel */}
+          <div className="relative w-4/5 max-w-xs bg-[#701212] text-amber-100 h-full shadow-2xl flex flex-col justify-between border-l-2 border-amber-400/50 z-10 animate-slideInRight">
+            {/* Top Header */}
+            <div className="p-4 border-b border-amber-400/30 flex items-center justify-between bg-black/20">
+              <div className="flex items-center gap-2 min-w-0">
+                {config.branding.logoUrl ? (
+                  <img 
+                    src={config.branding.logoUrl} 
+                    alt="Logo" 
+                    className="h-7 w-auto max-w-[80px] object-contain shrink-0"
+                  />
+                ) : (
+                  <div className="w-7 h-7 rounded-full bg-amber-400 text-red-950 font-bold text-xs flex items-center justify-center shrink-0">
+                    {config.branding.logoText || 'ÂD'}
+                  </div>
+                )}
+                <div className="font-serif font-bold text-amber-200 text-sm truncate">
+                  {config.branding.siteName || 'LỊCH VẠN NIÊN'}
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setMobileDrawerOpen(false)}
+                className="p-1.5 rounded-lg text-amber-200 hover:text-white hover:bg-white/10 shrink-0"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Navigation List */}
+            <div className="flex-1 overflow-y-auto p-3 space-y-3.5">
+              {navGroups.map((group, idx) => (
+                <div key={idx} className="space-y-1">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-amber-300/80 px-2 flex items-center gap-1.5 pb-0.5 border-b border-amber-400/20">
+                    {group.icon}
+                    <span>{group.label}</span>
+                  </div>
+                  
+                  {group.type === 'single' && group.id ? (
+                    <button
+                      onClick={() => {
+                        setActiveTab(group.id as ActiveTab);
+                        setMobileDrawerOpen(false);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                      className={`w-full text-left px-3 py-2 rounded-xl text-xs font-medium flex items-center gap-2.5 transition-all ${
+                        activeTab === group.id
+                          ? 'bg-amber-400 text-red-950 font-bold shadow'
+                          : 'text-amber-100 hover:bg-white/10'
+                      }`}
+                    >
+                      <div className="p-1 rounded-md bg-black/20">{group.icon}</div>
+                      <span>{group.label}</span>
+                    </button>
+                  ) : (
+                    <div className="space-y-1 pt-1">
+                      {group.children?.map((child) => (
+                        <button
+                          key={child.id}
+                          onClick={() => {
+                            setActiveTab(child.id);
+                            setMobileDrawerOpen(false);
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                          }}
+                          className={`w-full text-left px-2.5 py-1.5 rounded-xl text-xs font-medium flex items-center gap-2.5 transition-all ${
+                            activeTab === child.id
+                              ? 'bg-amber-400 text-red-950 font-bold shadow'
+                              : 'text-amber-100/90 hover:bg-white/10'
+                          }`}
+                        >
+                          <div className="p-1 rounded-md bg-black/20 shrink-0">{child.icon}</div>
+                          <div className="min-w-0">
+                            <div className="truncate font-semibold">{child.label}</div>
+                            {child.sublabel && (
+                              <div className="text-[9px] text-amber-200/60 truncate">{child.sublabel}</div>
+                            )}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Bottom Footer */}
+            <div className="p-3 border-t border-amber-400/30 bg-black/20 space-y-2 text-xs">
+              <button
+                onClick={() => {
+                  setActiveTab('about');
+                  setMobileDrawerOpen(false);
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                className="w-full py-2 bg-gradient-to-r from-amber-500 to-amber-600 text-red-950 font-bold rounded-xl shadow flex items-center justify-center gap-1.5"
+              >
+                <Heart className="w-3.5 h-3.5 fill-current" />
+                <span>Tiếp thêm động lực cho tôi !</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   );
 }

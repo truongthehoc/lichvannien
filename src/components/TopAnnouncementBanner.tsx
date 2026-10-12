@@ -233,7 +233,7 @@ export default function TopAnnouncementBanner({
   return (
     <div
       className={`relative z-50 overflow-hidden transition-all duration-500 ease-in-out ${currentTheme.bg} ${
-        isVisible ? 'max-h-24 opacity-100 border-b shadow-sm' : 'max-h-0 opacity-0 border-b-0 pointer-events-none'
+        isVisible ? 'max-h-32 sm:max-h-24 opacity-100 border-b shadow-sm' : 'max-h-0 opacity-0 border-b-0 pointer-events-none'
       } ${currentTheme.border} ${effect === 'pulse' && isVisible ? 'animate-pulse' : ''}`}
     >
       {/* Hiệu ứng Shimmer quét sáng */}
@@ -243,7 +243,7 @@ export default function TopAnnouncementBanner({
         </div>
       )}
 
-      <div className="max-w-[1440px] mx-auto px-4 py-1.5 flex items-center justify-between gap-3 text-xs">
+      <div className="max-w-[1440px] mx-auto px-2.5 sm:px-4 py-1 sm:py-1.5 flex items-center justify-between gap-2 sm:gap-3 text-xs">
         {/* Nút biểu tượng hoặc tag */}
         <div className="flex items-center gap-1.5 shrink-0 select-none">
           <Megaphone className="w-3.5 h-3.5 shrink-0" />
@@ -263,7 +263,7 @@ export default function TopAnnouncementBanner({
               </div>
             </div>
           ) : (
-            <p className={`${currentTheme.text} leading-tight truncate px-2`}>
+            <p className={`${currentTheme.text} leading-tight line-clamp-2 sm:line-clamp-1 px-1 sm:px-2 text-[11px] sm:text-xs`}>
               {announcementText}
             </p>
           )}

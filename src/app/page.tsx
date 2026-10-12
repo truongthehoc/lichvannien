@@ -29,7 +29,7 @@ export default function Home() {
     <div className="min-h-screen flex flex-col">
       <Header activeTab={activeTab} setActiveTab={setActiveTab} />
 
-      <main className="flex-1 max-w-[1440px] w-full mx-auto px-3 sm:px-6 lg:px-8 py-6 space-y-8">
+      <main className="flex-1 max-w-[1440px] w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-6 sm:space-y-8">
         {/* TAB 1: LỊCH VẠN NIÊN (THÁNG & NGÀY) */}
         {activeTab === 'calendar' && (
           <div className="space-y-8 animate-fadeIn">

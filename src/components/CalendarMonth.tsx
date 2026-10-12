@@ -60,7 +60,7 @@ export default function CalendarMonth({ selectedDate, onSelectDate }: CalendarMo
   // Ô trống đầu tháng
   for (let i = 0; i < startDayOffset; i++) {
     calendarCells.push(
-      <div key={`empty-start-${i}`} className="h-20 sm:h-24 bg-stone-50/40 rounded-lg border border-stone-100/60 opacity-40"></div>
+      <div key={`empty-start-${i}`} className="min-h-[64px] sm:h-24 bg-stone-50/40 rounded-lg border border-stone-100/60 opacity-40"></div>
     );
   }
 
@@ -94,7 +94,7 @@ export default function CalendarMonth({ selectedDate, onSelectDate }: CalendarMo
       <div
         key={`day-${day}`}
         onClick={() => onSelectDate(dateObj)}
-        className={`h-20 sm:h-24 p-1.5 sm:p-2 rounded-xl cursor-pointer transition-all duration-200 flex flex-col justify-between relative group border ${
+        className={`min-h-[64px] sm:h-24 p-1 sm:p-2 rounded-xl cursor-pointer transition-all duration-200 flex flex-col justify-between relative group border ${
           isSelected
             ? 'bg-amber-100 border-amber-600 ring-2 ring-amber-500 shadow-md z-10'
             : isToday
@@ -105,30 +105,30 @@ export default function CalendarMonth({ selectedDate, onSelectDate }: CalendarMo
         {/* Top: Solar day & Indicators */}
         <div className="flex items-center justify-between">
           <span
-            className={`text-base sm:text-xl font-bold font-serif ${
+            className={`text-sm sm:text-xl font-bold font-serif ${
               isWeekend ? 'text-red-600' : 'text-stone-800'
             } ${isSelected ? 'text-red-900' : ''}`}
           >
             {day}
           </span>
 
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-0.5 sm:gap-1">
             {/* Hoàng Đạo dot */}
             {hoangDaoInfo.isHoangDao && (
-              <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-amber-500 ring-1 ring-amber-300 shadow-xs" title="Ngày Hoàng Đạo" />
+              <span className="w-1.5 h-1.5 sm:w-2.5 sm:h-2.5 rounded-full bg-amber-500 ring-1 ring-amber-300 shadow-xs" title="Ngày Hoàng Đạo" />
             )}
             {/* Holiday star */}
             {(solarHoliday || lunarHoliday) && (
-              <span className="text-[10px] text-red-500">★</span>
+              <span className="text-[9px] sm:text-[10px] text-red-500">★</span>
             )}
           </div>
         </div>
 
         {/* Middle: Lunar day / month */}
         <div className="text-right">
-          <div className={`text-xs sm:text-sm font-medium ${
+          <div className={`text-[11px] sm:text-sm font-medium ${
             isRamOrMung1 
-              ? 'text-red-700 font-bold bg-amber-200/60 px-1 py-0.5 rounded inline-block' 
+              ? 'text-red-700 font-bold bg-amber-200/60 px-1 py-0.5 rounded inline-block text-[10px] sm:text-xs' 
               : 'text-stone-500'
           }`}>
             {lunarDay === 1 ? `${lunarDay}/${lunarMonth}` : lunarDay}
@@ -136,13 +136,13 @@ export default function CalendarMonth({ selectedDate, onSelectDate }: CalendarMo
         </div>
 
         {/* Bottom: Can chi mini note or holiday badge */}
-        <div className="truncate text-[10px] text-stone-400 group-hover:text-amber-800 transition-colors">
+        <div className="truncate text-[9px] sm:text-[10px] text-stone-400 group-hover:text-amber-800 transition-colors">
           {solarHoliday ? (
             <span className="text-red-600 font-medium truncate block">{solarHoliday}</span>
           ) : lunarHoliday ? (
             <span className="text-amber-700 font-medium truncate block">{lunarHoliday}</span>
           ) : (
-            <span>{canChiDayObj.fullName}</span>
+            <span className="hidden xs:inline sm:inline">{canChiDayObj.fullName}</span>
           )}
         </div>
       </div>
@@ -150,7 +150,7 @@ export default function CalendarMonth({ selectedDate, onSelectDate }: CalendarMo
   }
 
   return (
-    <div className="heritage-card p-4 sm:p-6 bg-white border border-[#ebdccb] space-y-4 relative overflow-hidden">
+    <div className="heritage-card p-3 sm:p-6 bg-white border border-[#ebdccb] space-y-3 sm:space-y-4 relative overflow-hidden">
       {/* 4 Góc hoa văn truyền thống */}
       <div className="absolute top-1.5 left-1.5 pointer-events-none opacity-40">
         <HeritageCornerPattern className="w-5 h-5 text-amber-700" />
@@ -166,40 +166,40 @@ export default function CalendarMonth({ selectedDate, onSelectDate }: CalendarMo
       </div>
 
       {/* Month & Year Navigator */}
-      <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-amber-100 relative z-10">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 sm:pb-4 border-b border-amber-100 relative z-10">
+        <div className="flex items-center justify-between sm:justify-start gap-2 sm:gap-3 w-full sm:w-auto">
           <button
             onClick={prevMonth}
-            className="p-2 rounded-lg bg-stone-100 hover:bg-amber-100 text-stone-700 hover:text-red-900 transition-colors"
+            className="p-1.5 sm:p-2 rounded-lg bg-stone-100 hover:bg-amber-100 text-stone-700 hover:text-red-900 transition-colors"
             title="Tháng trước"
           >
-            <ChevronLeft className="w-5 h-5" />
+            <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
 
-          <div>
-            <h2 className="text-xl sm:text-2xl font-serif font-bold text-[#8b1818]">
+          <div className="text-center sm:text-left">
+            <h2 className="text-base sm:text-2xl font-serif font-bold text-[#8b1818]">
               Tháng {currentMonth + 1} / {currentYear}
             </h2>
-            <div className="text-xs sm:text-sm text-stone-500">
+            <div className="text-[11px] sm:text-xs text-stone-500">
               Tháng {canChiMonth} • Năm {canChiYear}
             </div>
           </div>
 
           <button
             onClick={nextMonth}
-            className="p-2 rounded-lg bg-stone-100 hover:bg-amber-100 text-stone-700 hover:text-red-900 transition-colors"
+            className="p-1.5 sm:p-2 rounded-lg bg-stone-100 hover:bg-amber-100 text-stone-700 hover:text-red-900 transition-colors"
             title="Tháng sau"
           >
-            <ChevronRight className="w-5 h-5" />
+            <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
         </div>
 
         {/* Fast Selectors */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between sm:justify-end gap-1.5 sm:gap-2 w-full sm:w-auto">
           <select
             value={currentMonth}
             onChange={(e) => setCurrentMonth(parseInt(e.target.value))}
-            className="text-xs sm:text-sm bg-stone-50 border border-stone-300 rounded-lg px-2.5 py-1.5 font-medium text-stone-700 focus:outline-none focus:ring-2 focus:ring-amber-500"
+            className="flex-1 sm:flex-none text-xs sm:text-sm bg-stone-50 border border-stone-300 rounded-lg px-2 sm:px-2.5 py-1.5 font-medium text-stone-700 focus:outline-none focus:ring-2 focus:ring-amber-500"
           >
             {Array.from({ length: 12 }, (_, i) => (
               <option key={i} value={i}>
@@ -211,7 +211,7 @@ export default function CalendarMonth({ selectedDate, onSelectDate }: CalendarMo
           <select
             value={currentYear}
             onChange={(e) => setCurrentYear(parseInt(e.target.value))}
-            className="text-xs sm:text-sm bg-stone-50 border border-stone-300 rounded-lg px-2.5 py-1.5 font-medium text-stone-700 focus:outline-none focus:ring-2 focus:ring-amber-500"
+            className="flex-1 sm:flex-none text-xs sm:text-sm bg-stone-50 border border-stone-300 rounded-lg px-2 sm:px-2.5 py-1.5 font-medium text-stone-700 focus:outline-none focus:ring-2 focus:ring-amber-500"
           >
             {Array.from({ length: 100 }, (_, i) => 1970 + i).map((y) => (
               <option key={y} value={y}>
@@ -222,7 +222,7 @@ export default function CalendarMonth({ selectedDate, onSelectDate }: CalendarMo
 
           <button
             onClick={jumpToToday}
-            className="text-xs sm:text-sm bg-amber-500 hover:bg-amber-600 text-red-950 font-bold px-3 py-1.5 rounded-lg transition-colors shadow-sm"
+            className="text-xs sm:text-sm bg-amber-500 hover:bg-amber-600 text-red-950 font-bold px-2.5 sm:px-3 py-1.5 rounded-lg transition-colors shadow-sm shrink-0 whitespace-nowrap"
           >
             Hôm Nay
           </button>

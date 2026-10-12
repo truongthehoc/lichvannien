@@ -69,7 +69,7 @@ export function DayHeroCard({ currentDate, onDateChange }: { currentDate: Date; 
         <div className="flex items-center justify-between gap-2 border-b border-red-400/30 pb-2">
           <button
             onClick={prevDay}
-            className="flex items-center gap-1 text-xs bg-white/10 hover:bg-white/20 px-2.5 py-1 rounded-lg backdrop-blur-sm transition-all text-amber-200"
+            className="flex items-center gap-1 text-xs bg-white/10 hover:bg-white/20 px-2.5 sm:px-3 py-1.5 rounded-lg backdrop-blur-sm transition-all text-amber-200 active:scale-95"
           >
             <ChevronLeft className="w-3.5 h-3.5" />
             <span>Ngày trước</span>
@@ -77,14 +77,14 @@ export function DayHeroCard({ currentDate, onDateChange }: { currentDate: Date; 
 
           <button
             onClick={today}
-            className="text-xs bg-amber-400 text-red-950 font-bold px-3 py-1 rounded-lg shadow hover:bg-amber-300 transition-all"
+            className="text-xs bg-amber-400 text-red-950 font-bold px-3 sm:px-3.5 py-1.5 rounded-lg shadow hover:bg-amber-300 transition-all active:scale-95"
           >
             Hôm Nay
           </button>
 
           <button
             onClick={nextDay}
-            className="flex items-center gap-1 text-xs bg-white/10 hover:bg-white/20 px-2.5 py-1 rounded-lg backdrop-blur-sm transition-all text-amber-200"
+            className="flex items-center gap-1 text-xs bg-white/10 hover:bg-white/20 px-2.5 sm:px-3 py-1.5 rounded-lg backdrop-blur-sm transition-all text-amber-200 active:scale-95"
           >
             <span>Ngày sau</span>
             <ChevronRight className="w-3.5 h-3.5" />
@@ -92,14 +92,14 @@ export function DayHeroCard({ currentDate, onDateChange }: { currentDate: Date; 
         </div>
 
         {/* Dương Lịch & Âm Lịch Side-by-side */}
-        <div className="grid grid-cols-2 gap-3 items-center">
+        <div className="grid grid-cols-2 gap-2 sm:gap-3 items-center">
           {/* Dương Lịch */}
-          <div className="border-r border-red-400/30 pr-3 text-center sm:text-left">
+          <div className="border-r border-red-400/30 pr-2 sm:pr-3 text-center sm:text-left">
             <div className="text-amber-300 font-medium text-[10px] uppercase tracking-wider flex items-center justify-center sm:justify-start gap-1">
               <CalendarIcon className="w-3 h-3" />
               <span>DƯƠNG LỊCH</span>
             </div>
-            <div className="text-5xl font-bold font-serif text-white tracking-tight drop-shadow-md my-0.5">
+            <div className="text-4xl sm:text-5xl font-bold font-serif text-white tracking-tight drop-shadow-md my-0.5">
               {dayDetails.solarDay}
             </div>
             <div className="text-amber-100 text-xs font-medium">
@@ -116,20 +116,20 @@ export function DayHeroCard({ currentDate, onDateChange }: { currentDate: Date; 
           </div>
 
           {/* Âm Lịch */}
-          <div className="pl-2 text-center sm:text-left">
+          <div className="pl-1 sm:pl-2 text-center sm:text-left">
             <div className="text-amber-300 font-medium text-[10px] uppercase tracking-wider flex items-center justify-center sm:justify-start gap-1">
               <Sun className="w-3 h-3" />
               <span>ÂM LỊCH</span>
             </div>
             <div className="flex items-baseline justify-center sm:justify-start gap-1 my-0.5">
-              <span className="text-5xl font-bold font-serif text-amber-300 drop-shadow-md">
+              <span className="text-4xl sm:text-5xl font-bold font-serif text-amber-300 drop-shadow-md">
                 {dayDetails.lunarDay}
               </span>
               <span className="text-xs text-amber-100 font-serif">
                 / Thg {dayDetails.lunarMonth} {dayDetails.isLeap ? '(N)' : ''}
               </span>
             </div>
-            <div className="text-amber-200 text-xs font-medium space-y-0.5 leading-snug">
+            <div className="text-amber-200 text-[11px] sm:text-xs font-medium space-y-0.5 leading-snug">
               <div>Ngày: <strong className="text-white">{dayDetails.canChiDay}</strong></div>
               <div>Tháng: <strong className="text-white">{dayDetails.canChiMonth}</strong></div>
               <div>Năm: <strong className="text-white">{dayDetails.canChiYear}</strong></div>
@@ -245,16 +245,16 @@ export function DayDetailedPanels({ currentDate }: { currentDate: Date }) {
   return (
     <div className="space-y-6">
       {/* Khối 1: Giờ Hoàng Đạo trong ngày - Full width across screen */}
-      <div className="heritage-card p-5 sm:p-6 bg-white border border-[#e5d5c5]">
-        <div className="flex items-center justify-between gap-2 mb-4 pb-3 border-b border-amber-100">
-          <div className="flex items-center gap-2 text-[#8b1818] font-serif font-bold text-lg">
-            <Clock className="w-5 h-5 text-amber-600" />
+      <div className="heritage-card p-3.5 sm:p-6 bg-white border border-[#e5d5c5]">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3 sm:mb-4 pb-2.5 sm:pb-3 border-b border-amber-100">
+          <div className="flex items-center gap-2 text-[#8b1818] font-serif font-bold text-base sm:text-lg">
+            <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 shrink-0" />
             <span>Khung Giờ Hoàng Đạo & Hắc Đạo Trong Ngày</span>
           </div>
           <div className="flex items-center gap-3 text-xs">
             <span className="flex items-center gap-1 text-emerald-800 font-medium">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-600"></span>
-              <span>Giờ Hoàng Đạo (Tốt)</span>
+              <span>Giờ Hoàng Đạo</span>
             </span>
             <span className="flex items-center gap-1 text-stone-600 font-medium">
               <span className="w-2.5 h-2.5 rounded-full bg-stone-400"></span>
@@ -291,9 +291,9 @@ export function DayDetailedPanels({ currentDate }: { currentDate: Date }) {
       {/* Khối 2: 2 Cột cân đối: Trực & Sao vs Hướng Xuất Hành & Tuổi Xung */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Cột Trái: Trực, Nhị Thập Bát Tú & Ngũ Hành */}
-        <div className="heritage-card p-5 sm:p-6 bg-white border border-[#e5d5c5] space-y-4 flex flex-col justify-between">
-          <div className="flex items-center gap-2 text-[#8b1818] font-serif font-bold text-lg pb-2 border-b border-amber-100">
-            <Star className="w-5 h-5 text-amber-600" />
+        <div className="heritage-card p-3.5 sm:p-6 bg-white border border-[#e5d5c5] space-y-4 flex flex-col justify-between">
+          <div className="flex items-center gap-2 text-[#8b1818] font-serif font-bold text-base sm:text-lg pb-2 border-b border-amber-100">
+            <Star className="w-5 h-5 text-amber-600 shrink-0" />
             <span>Trực, Sao & Ngũ Hành Nạp Âm</span>
           </div>
 
@@ -332,9 +332,9 @@ export function DayDetailedPanels({ currentDate }: { currentDate: Date }) {
         </div>
 
         {/* Cột Phải: Hướng Xuất Hành & Tuổi Xung */}
-        <div className="heritage-card p-5 sm:p-6 bg-white border border-[#e5d5c5] space-y-4 flex flex-col justify-between">
-          <div className="flex items-center gap-2 text-[#8b1818] font-serif font-bold text-lg pb-2 border-b border-amber-100">
-            <Compass className="w-5 h-5 text-amber-600" />
+        <div className="heritage-card p-3.5 sm:p-6 bg-white border border-[#e5d5c5] space-y-4 flex flex-col justify-between">
+          <div className="flex items-center gap-2 text-[#8b1818] font-serif font-bold text-base sm:text-lg pb-2 border-b border-amber-100">
+            <Compass className="w-5 h-5 text-amber-600 shrink-0" />
             <span>Hướng Xuất Hành & Tuổi Xung Khắc</span>
           </div>
 
@@ -345,18 +345,18 @@ export function DayDetailedPanels({ currentDate }: { currentDate: Date }) {
                 <Compass className="w-4 h-4 text-amber-700" />
                 <span>Hướng Tốt Xuất Hành Đầu Ngày:</span>
               </h5>
-              <div className="grid grid-cols-3 gap-2.5 text-center text-xs">
-                <div className="bg-white p-2.5 rounded-lg border border-amber-200 shadow-sm">
-                  <div className="text-stone-500 text-[11px] mb-0.5">Hỷ Thần</div>
-                  <div className="font-bold text-red-700 text-sm">{ngayTotXau.huongXuatHanh.hyThan}</div>
+              <div className="grid grid-cols-3 gap-1.5 sm:gap-2.5 text-center text-xs">
+                <div className="bg-white p-2 sm:p-2.5 rounded-lg border border-amber-200 shadow-sm">
+                  <div className="text-stone-500 text-[10px] sm:text-[11px] mb-0.5">Hỷ Thần</div>
+                  <div className="font-bold text-red-700 text-xs sm:text-sm">{ngayTotXau.huongXuatHanh.hyThan}</div>
                 </div>
-                <div className="bg-white p-2.5 rounded-lg border border-amber-200 shadow-sm">
-                  <div className="text-stone-500 text-[11px] mb-0.5">Tài Thần</div>
-                  <div className="font-bold text-emerald-700 text-sm">{ngayTotXau.huongXuatHanh.taiThan}</div>
+                <div className="bg-white p-2 sm:p-2.5 rounded-lg border border-amber-200 shadow-sm">
+                  <div className="text-stone-500 text-[10px] sm:text-[11px] mb-0.5">Tài Thần</div>
+                  <div className="font-bold text-emerald-700 text-xs sm:text-sm">{ngayTotXau.huongXuatHanh.taiThan}</div>
                 </div>
-                <div className="bg-white p-2.5 rounded-lg border border-amber-200 shadow-sm">
-                  <div className="text-stone-500 text-[11px] mb-0.5">Hạc Thần (Né)</div>
-                  <div className="font-bold text-stone-600 text-sm">{ngayTotXau.huongXuatHanh.hacThan}</div>
+                <div className="bg-white p-2 sm:p-2.5 rounded-lg border border-amber-200 shadow-sm">
+                  <div className="text-stone-500 text-[10px] sm:text-[11px] mb-0.5">Hạc Thần (Né)</div>
+                  <div className="font-bold text-stone-600 text-xs sm:text-sm">{ngayTotXau.huongXuatHanh.hacThan}</div>
                 </div>
               </div>
             </div>
@@ -381,17 +381,17 @@ export function DayDetailedPanels({ currentDate }: { currentDate: Date }) {
       </div>
 
       {/* Khối 3: Việc Nên Làm & Việc Kiêng Cữ */}
-      <div className="heritage-card p-5 sm:p-6 bg-white border border-[#e5d5c5]">
-        <div className="flex items-center gap-2 text-[#8b1818] font-serif font-bold text-lg mb-4 pb-3 border-b border-amber-100">
-          <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+      <div className="heritage-card p-3.5 sm:p-6 bg-white border border-[#e5d5c5]">
+        <div className="flex items-center gap-2 text-[#8b1818] font-serif font-bold text-base sm:text-lg mb-3 sm:mb-4 pb-2.5 sm:pb-3 border-b border-amber-100">
+          <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
           <span>Chi Tiết Việc Nên Làm & Việc Kiêng Cữ</span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs sm:text-sm">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 text-xs sm:text-sm">
           {/* Việc nên làm */}
-          <div className="bg-emerald-50/50 p-4 rounded-xl border border-emerald-200">
-            <div className="flex items-center gap-1.5 text-emerald-800 font-bold mb-3 text-sm">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+          <div className="bg-emerald-50/50 p-3.5 sm:p-4 rounded-xl border border-emerald-200">
+            <div className="flex items-center gap-1.5 text-emerald-800 font-bold mb-2.5 text-sm">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
               <span>Nên Làm Trong Ngày:</span>
             </div>
             <ul className="space-y-2 text-stone-700">
@@ -405,9 +405,9 @@ export function DayDetailedPanels({ currentDate }: { currentDate: Date }) {
           </div>
 
           {/* Việc kiêng kỵ */}
-          <div className="bg-red-50/50 p-4 rounded-xl border border-red-200">
-            <div className="flex items-center gap-1.5 text-red-800 font-bold mb-3 text-sm">
-              <XCircle className="w-4 h-4 text-red-600" />
+          <div className="bg-red-50/50 p-3.5 sm:p-4 rounded-xl border border-red-200">
+            <div className="flex items-center gap-1.5 text-red-800 font-bold mb-2.5 text-sm">
+              <XCircle className="w-4 h-4 text-red-600 shrink-0" />
               <span>Kiêng Kỵ Nên Tránh:</span>
             </div>
             <ul className="space-y-2 text-stone-700">
@@ -423,7 +423,7 @@ export function DayDetailedPanels({ currentDate }: { currentDate: Date }) {
 
         {/* Cảnh báo ngày kỵ nếu có */}
         {(ngayTotXau.tamNuong || ngayTotXau.nguyetKy || ngayTotXau.duongCongKy || ngayTotXau.satChu || ngayTotXau.thoTu) && (
-          <div className="mt-4 p-3.5 bg-amber-100/80 border border-amber-300 rounded-xl flex items-start gap-2.5 text-xs text-amber-950">
+          <div className="mt-4 p-3 sm:p-3.5 bg-amber-100/80 border border-amber-300 rounded-xl flex items-start gap-2.5 text-xs text-amber-950">
             <AlertTriangle className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
             <div>
               <strong className="font-bold">Lưu ý ngày bách kỵ: </strong>
@@ -443,7 +443,7 @@ export function DayDetailedPanels({ currentDate }: { currentDate: Date }) {
       </div>
 
       {/* Khối 4: Vận Thế 12 Con Giáp Ngày Này (Tử Vi Hàng Ngày) */}
-      <div className="heritage-card p-5 sm:p-6 bg-white border border-[#e5d5c5]">
+      <div className="heritage-card p-3.5 sm:p-6 bg-white border border-[#e5d5c5]">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[#8b1818] font-serif font-bold text-lg mb-4 pb-3 border-b border-amber-100">
           <div className="flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-amber-600" />
