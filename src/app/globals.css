@@ -1,0 +1,121 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #fdfaf3;
+  --foreground: #2d1810;
+}
+
+body {
+  color: var(--foreground);
+  background-color: var(--background);
+  font-family: Arial, Helvetica, sans-serif;
+  /* Nền hoa văn truyền thống Đông Sơn & Hồi văn kết hợp giấy điệp */
+  background-image: 
+    radial-gradient(rgba(180, 83, 9, 0.04) 1px, transparent 0),
+    url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23b45309' fill-opacity='0.025' fill-rule='evenodd'%3E%3Cpath d='M30 30L15 15H0v15l15 15h15V30zm0 0l15 15h15V30L45 15H30v15zM0 0h15v15H0V0zm45 0h15v15H45V0z'/%3E%3Ccircle cx='30' cy='30' r='4' fill='%23991b1b' fill-opacity='0.03'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 24px 24px, 60px 60px;
+  background-attachment: fixed;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1ebd9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c59b6b;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #9a2020;
+}
+
+/* Traditional Oriental Border & Shadow */
+.heritage-border {
+  border: 1px solid #e7d8c5;
+  box-shadow: 0 4px 20px -2px rgba(90, 40, 20, 0.05);
+}
+
+.heritage-card {
+  background-color: #ffffff;
+  background-image: 
+    radial-gradient(rgba(180, 83, 9, 0.02) 1px, transparent 0),
+    url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%2392400e' fill-opacity='0.015' fill-rule='evenodd'%3E%3Cpath d='M0 40L40 0H20L0 20M40 40V20L20 40'/%3E%3C/g%3E%3C/svg%3E");
+  border: 1px solid #ebdccb;
+  border-radius: 16px;
+  box-shadow: 0 4px 18px rgba(160, 68, 46, 0.06);
+  position: relative;
+}
+
+/* Hoa văn Hồi văn chữ Vạn (Gấm cung đình) */
+.pattern-hoi-van {
+  background-color: #fdfbf7;
+  background-image: url("data:image/svg+xml,%3Csvg width='48' height='48' viewBox='0 0 48 48' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23b45309' fill-opacity='0.035'%3E%3Cpath d='M24 0h6v18h-6V6H6v12H0V0h24zm0 48h-6V30h6v12h18V30h6v18H24zm-6-24v6H6v-6h12zm24 0v6h-12v-6h12z'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+/* Hoa văn Trống Đồng Đông Sơn chìm */
+.pattern-dong-son {
+  background-image: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23854d0e' stroke-width='1' stroke-opacity='0.04'%3E%3Ccircle cx='40' cy='40' r='36' stroke-dasharray='3 3'/%3E%3Ccircle cx='40' cy='40' r='26'/%3E%3Ccircle cx='40' cy='40' r='16' stroke-dasharray='2 2'/%3E%3Ccircle cx='40' cy='40' r='6' fill='%23854d0e' fill-opacity='0.03'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+/* Hoa văn Giấy Dó Vân Điệp Cổ */
+.pattern-giay-do {
+  background-color: #faf6ec;
+  background-image: 
+    radial-gradient(rgba(180, 83, 9, 0.03) 1px, transparent 0),
+    url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%2378350f' fill-opacity='0.02' fill-rule='evenodd'/%3E%3C/svg%3E");
+}
+
+.gold-gradient {
+  background: linear-gradient(135deg, #d97706 0%, #f59e0b 50%, #b45309 100%);
+}
+
+.red-gradient {
+  background: linear-gradient(135deg, #991b1b 0%, #b91c1c 50%, #7f1d1d 100%);
+}
+
+.jade-gradient {
+  background: linear-gradient(135deg, #065f46 0%, #047857 50%, #064e3b 100%);
+}
+
+/* Banner Animations */
+@keyframes marquee-scroll {
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+.animate-marquee {
+  display: inline-block;
+  white-space: nowrap;
+  animation: marquee-scroll 22s linear infinite;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
+@keyframes shimmer-sweep {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-shimmer-sweep {
+  animation: shimmer-sweep 2.5s infinite;
+}
+
