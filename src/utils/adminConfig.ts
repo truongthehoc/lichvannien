@@ -93,6 +93,19 @@ export interface AnnouncementSettings {
   endTime?: string; // HH:mm
 }
 
+export type UserRole = 'admin' | 'manager';
+
+export interface AdminUser {
+  id: string;
+  username: string;
+  password: string;
+  fullName: string;
+  role: UserRole;
+  status: 'active' | 'blocked';
+  createdAt: string;
+  lastLogin?: string;
+}
+
 export interface AppConfig {
   branding: {
     siteName: string;
@@ -151,6 +164,7 @@ export interface AppConfig {
     loveMessage: string;
     bottomLinkText?: string;
   };
+  users?: AdminUser[];
 }
 
 export const DEFAULT_APP_CONFIG: AppConfig = {
@@ -227,6 +241,26 @@ export const DEFAULT_APP_CONFIG: AppConfig = {
     loveMessage: 'Phát triển với tâm huyết gìn giữ tinh hoa văn hóa truyền thống',
     bottomLinkText: 'Tiếp thêm động lực cho tôi !',
   },
+  users: [
+    {
+      id: 'admin-1',
+      username: 'admin',
+      password: 'admin888',
+      fullName: 'Quản Trị Viên Tối Cao',
+      role: 'admin',
+      status: 'active',
+      createdAt: '2026-10-06',
+    },
+    {
+      id: 'manager-1',
+      username: 'quanly',
+      password: 'quanly123',
+      fullName: 'Biên Tập Viên & Quản Lý',
+      role: 'manager',
+      status: 'active',
+      createdAt: '2026-10-12',
+    },
+  ],
 };
 
 const STORAGE_KEY = 'lichvannien_admin_config';
@@ -282,6 +316,10 @@ export function getStoredConfig(): AppConfig {
       ? storedAnnSettings.enabled 
       : (parsed.system?.showAnnouncement ?? DEFAULT_APP_CONFIG.system.showAnnouncement);
 
+    const storedUsers: AdminUser[] = Array.isArray(parsed.users) && parsed.users.length > 0
+      ? parsed.users
+      : DEFAULT_APP_CONFIG.users || [];
+
     return {
       ...DEFAULT_APP_CONFIG,
       ...parsed,
@@ -313,6 +351,7 @@ export function getStoredConfig(): AppConfig {
         versionDescription: parsed.footer?.versionDescription || DEFAULT_APP_CONFIG.footer.versionDescription,
         bottomLinkText: parsed.footer?.bottomLinkText !== undefined ? parsed.footer.bottomLinkText : DEFAULT_APP_CONFIG.footer.bottomLinkText,
       },
+      users: storedUsers,
     };
   } catch {
     return DEFAULT_APP_CONFIG;
@@ -337,6 +376,7 @@ export function saveStoredConfig(config: AppConfig): void {
           enabled: isAnnEnabled,
         },
       },
+      users: Array.isArray(config.users) && config.users.length > 0 ? config.users : DEFAULT_APP_CONFIG.users,
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(normalizedConfig));
     window.dispatchEvent(new Event('app-config-updated'));

@@ -46,7 +46,13 @@ import {
   Clock,
   Timer,
   Zap,
-  Palette
+  Palette,
+  Users,
+  UserCheck,
+  UserPlus,
+  Shield,
+  Key,
+  Edit3
 } from 'lucide-react';
 import { 
   AppConfig, 
@@ -57,11 +63,13 @@ import {
   VIETNAM_BANKS,
   getVietQrUrl,
   AnnouncementEffect,
-  AnnouncementTheme
+  AnnouncementTheme,
+  AdminUser,
+  UserRole
 } from '@/utils/adminConfig';
 import TopAnnouncementBanner from '@/components/TopAnnouncementBanner';
 
-type AdminTab = 'features' | 'branding' | 'donation' | 'contact_footer' | 'system';
+type AdminTab = 'features' | 'branding' | 'donation' | 'contact_footer' | 'system' | 'users';
 
 interface FeatureItem {
   key: keyof AppConfig['features'];
@@ -85,7 +93,7 @@ interface FeatureGroup {
 export default function AdminPage() {
   const [isAuthChecking, setIsAuthChecking] = useState<boolean>(true);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [username, setUsername] = useState<string>('admin');
+  const [username, setUsername] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string>('');
@@ -101,32 +109,227 @@ export default function AdminPage() {
     countdown: 0,
   });
 
+  // Current logged in user
+  const [currentUser, setCurrentUser] = useState<AdminUser | null>(null);
+
+  // User management modal states
+  const [showUserModal, setShowUserModal] = useState<boolean>(false);
+  const [editingUser, setEditingUser] = useState<AdminUser | null>(null);
+  const [formUsername, setFormUsername] = useState<string>('');
+  const [formPassword, setFormPassword] = useState<string>('');
+  const [formFullName, setFormFullName] = useState<string>('');
+  const [formRole, setFormRole] = useState<UserRole>('manager');
+  const [formStatus, setFormStatus] = useState<'active' | 'blocked'>('active');
+  const [formError, setFormError] = useState<string>('');
+  const [userSearch, setUserSearch] = useState<string>('');
+
   useEffect(() => {
-    setConfig(getStoredConfig());
+    const loaded = getStoredConfig();
+    setConfig(loaded);
     if (typeof window !== 'undefined' && sessionStorage.getItem('lichvannien_admin_unlocked') === 'true') {
       setIsAuthenticated(true);
+      const savedUserStr = sessionStorage.getItem('lichvannien_admin_user');
+      if (savedUserStr) {
+        try {
+          setCurrentUser(JSON.parse(savedUserStr));
+        } catch {
+          // fallback
+          setCurrentUser((loaded.users && loaded.users[0]) || DEFAULT_APP_CONFIG.users?.[0] || null);
+        }
+      } else {
+        setCurrentUser((loaded.users && loaded.users[0]) || DEFAULT_APP_CONFIG.users?.[0] || null);
+      }
     }
     setIsAuthChecking(false);
   }, []);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (
-      (username === 'admin' && (password === 'admin888' || password === 'admin123' || password === 'admin')) ||
-      password === 'admin888' ||
-      password === 'admin123'
-    ) {
+    const cleanUser = username.trim().toLowerCase();
+    const userList = config.users || DEFAULT_APP_CONFIG.users || [];
+
+    const found = userList.find(
+      (u) => u.username.toLowerCase() === cleanUser && u.password === password
+    );
+
+    if (found) {
+      if (found.status === 'blocked') {
+        setErrorMsg('Tài khoản này đã bị tạm khóa. Vui lòng liên hệ Quản trị viên!');
+        return;
+      }
       setIsAuthenticated(true);
+      setCurrentUser(found);
       setErrorMsg('');
       sessionStorage.setItem('lichvannien_admin_unlocked', 'true');
+      sessionStorage.setItem('lichvannien_admin_user', JSON.stringify(found));
+    } else if (
+      (cleanUser === 'admin' && (password === 'admin888' || password === 'admin123')) ||
+      password === 'admin888'
+    ) {
+      // Fallback default super admin
+      const rootAdmin = userList[0] || {
+        id: 'admin-1',
+        username: 'admin',
+        password: 'admin888',
+        fullName: 'Quản Trị Viên Tối Cao',
+        role: 'admin' as UserRole,
+        status: 'active' as const,
+        createdAt: '2026-10-06',
+      };
+      setIsAuthenticated(true);
+      setCurrentUser(rootAdmin);
+      setErrorMsg('');
+      sessionStorage.setItem('lichvannien_admin_unlocked', 'true');
+      sessionStorage.setItem('lichvannien_admin_user', JSON.stringify(rootAdmin));
     } else {
-      setErrorMsg('Tài khoản hoặc mật khẩu không chính xác! (Gợi ý: admin / admin888)');
+      setErrorMsg('Tài khoản hoặc mật khẩu không chính xác. Vui lòng thử lại!');
     }
   };
 
   const handleLogout = () => {
     setIsAuthenticated(false);
+    setCurrentUser(null);
     sessionStorage.removeItem('lichvannien_admin_unlocked');
+    sessionStorage.removeItem('lichvannien_admin_user');
+  };
+
+  const handleOpenAddUser = () => {
+    setEditingUser(null);
+    setFormUsername('');
+    setFormPassword('');
+    setFormFullName('');
+    setFormRole('manager');
+    setFormStatus('active');
+    setFormError('');
+    setShowUserModal(true);
+  };
+
+  const handleOpenEditUser = (user: AdminUser) => {
+    setEditingUser(user);
+    setFormUsername(user.username);
+    setFormPassword(''); // blank means keep unchanged
+    setFormFullName(user.fullName);
+    setFormRole(user.role);
+    setFormStatus(user.status);
+    setFormError('');
+    setShowUserModal(true);
+  };
+
+  const handleSaveUser = (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormError('');
+
+    const cleanUsername = formUsername.trim().toLowerCase();
+    const cleanFullName = formFullName.trim();
+    const currentUsers = config.users || DEFAULT_APP_CONFIG.users || [];
+
+    if (!cleanUsername) {
+      setFormError('Vui lòng nhập tên tài khoản!');
+      return;
+    }
+    if (!cleanFullName) {
+      setFormError('Vui lòng nhập họ và tên hiển thị!');
+      return;
+    }
+
+    if (!editingUser) {
+      // Adding new
+      if (!formPassword) {
+        setFormError('Vui lòng nhập mật khẩu cho tài khoản mới!');
+        return;
+      }
+      if (currentUsers.some((u) => u.username.toLowerCase() === cleanUsername)) {
+        setFormError(`Tài khoản "${cleanUsername}" đã tồn tại! Vui lòng chọn tên khác.`);
+        return;
+      }
+
+      const newUser: AdminUser = {
+        id: `user-${Date.now()}`,
+        username: cleanUsername,
+        password: formPassword,
+        fullName: cleanFullName,
+        role: formRole,
+        status: formStatus,
+        createdAt: new Date().toISOString().split('T')[0],
+      };
+
+      const updatedUsers = [...currentUsers, newUser];
+      const updatedConfig = { ...config, users: updatedUsers };
+      setConfig(updatedConfig);
+      saveStoredConfig(updatedConfig);
+      setShowUserModal(false);
+      setSaveToast(true);
+      setTimeout(() => setSaveToast(false), 2000);
+    } else {
+      // Editing existing
+      const updatedUsers = currentUsers.map((u) => {
+        if (u.id === editingUser.id) {
+          return {
+            ...u,
+            fullName: cleanFullName,
+            role: formRole,
+            status: formStatus,
+            password: formPassword ? formPassword : u.password,
+          };
+        }
+        return u;
+      });
+
+      const updatedConfig = { ...config, users: updatedUsers };
+      setConfig(updatedConfig);
+      saveStoredConfig(updatedConfig);
+
+      // If updating current user, refresh current user session
+      if (currentUser?.id === editingUser.id) {
+        const refreshed = updatedUsers.find((u) => u.id === editingUser.id);
+        if (refreshed) {
+          setCurrentUser(refreshed);
+          sessionStorage.setItem('lichvannien_admin_user', JSON.stringify(refreshed));
+        }
+      }
+
+      setShowUserModal(false);
+      setSaveToast(true);
+      setTimeout(() => setSaveToast(false), 2000);
+    }
+  };
+
+  const handleDeleteUser = (user: AdminUser) => {
+    if (user.username === 'admin') {
+      alert('Không thể xóa tài khoản Quản trị viên tối cao (admin)!');
+      return;
+    }
+    if (currentUser?.id === user.id) {
+      alert('Bạn không thể tự xóa tài khoản của chính mình khi đang đăng nhập!');
+      return;
+    }
+    if (window.confirm(`Bạn có chắc chắn muốn xóa tài khoản "${user.username}" (${user.fullName})?`)) {
+      const currentUsers = config.users || DEFAULT_APP_CONFIG.users || [];
+      const updatedUsers = currentUsers.filter((u) => u.id !== user.id);
+      const updatedConfig = { ...config, users: updatedUsers };
+      setConfig(updatedConfig);
+      saveStoredConfig(updatedConfig);
+      setSaveToast(true);
+      setTimeout(() => setSaveToast(false), 2000);
+    }
+  };
+
+  const handleToggleUserStatus = (user: AdminUser) => {
+    if (user.username === 'admin') {
+      alert('Không thể khóa tài khoản Quản trị viên tối cao!');
+      return;
+    }
+    if (currentUser?.id === user.id) {
+      alert('Bạn không thể tự khóa tài khoản của chính mình!');
+      return;
+    }
+
+    const nextStatus: 'active' | 'blocked' = user.status === 'active' ? 'blocked' : 'active';
+    const currentUsers = config.users || DEFAULT_APP_CONFIG.users || [];
+    const updatedUsers: AdminUser[] = currentUsers.map((u) => (u.id === user.id ? { ...u, status: nextStatus } : u));
+    const updatedConfig: AppConfig = { ...config, users: updatedUsers };
+    setConfig(updatedConfig);
+    saveStoredConfig(updatedConfig);
   };
 
   const handleSave = () => {
@@ -323,7 +526,7 @@ export default function AdminPage() {
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="admin"
+                placeholder="Nhập tên tài khoản..."
                 className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm text-slate-900 focus:bg-white focus:outline-none focus:border-amber-500"
               />
             </div>
@@ -337,7 +540,7 @@ export default function AdminPage() {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="admin888"
+                  placeholder="Nhập mật khẩu..."
                   className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-mono text-slate-900 focus:bg-white focus:outline-none focus:border-amber-500"
                   autoFocus
                 />
@@ -367,13 +570,7 @@ export default function AdminPage() {
 
           <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
             <Link href="/" className="hover:text-amber-600">← Về Trang Chủ</Link>
-            <button
-              type="button"
-              onClick={() => { setUsername('admin'); setPassword('admin888'); }}
-              className="text-amber-600 font-semibold hover:underline"
-            >
-              Điền mẫu demo
-            </button>
+            <span className="text-slate-400">Hệ thống bảo mật</span>
           </div>
         </div>
       </div>
@@ -389,6 +586,7 @@ export default function AdminPage() {
     { id: 'donation' as const, label: 'Thông Tin Donate & VietQR', icon: <CreditCard className="w-4 h-4" /> },
     { id: 'contact_footer' as const, label: 'Liên Hệ & Chân Trang', icon: <Phone className="w-4 h-4" /> },
     { id: 'system' as const, label: 'Hệ Thống & Thông Báo', icon: <Sliders className="w-4 h-4" /> },
+    { id: 'users' as const, label: 'Quản Lý Người Dùng', icon: <Users className="w-4 h-4" />, count: `${(config.users || []).length}` },
   ];
 
   return (
@@ -487,15 +685,22 @@ export default function AdminPage() {
 
         {/* Sidebar Footer */}
         <div className="p-3 border-t border-slate-800 flex items-center justify-between bg-slate-950/40 text-xs">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-full bg-slate-800 flex items-center justify-center font-bold text-amber-400 text-xs font-mono">
-              AD
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="w-7 h-7 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center font-bold text-amber-400 text-xs font-mono shrink-0">
+              {currentUser?.fullName?.charAt(0).toUpperCase() || (currentUser?.username?.charAt(0).toUpperCase() || 'A')}
             </div>
-            <span className="text-slate-300 font-medium truncate max-w-[110px]">admin</span>
+            <div className="min-w-0">
+              <div className="text-slate-200 font-bold truncate text-[11px] leading-tight">
+                {currentUser?.fullName || currentUser?.username || 'admin'}
+              </div>
+              <div className="text-[10px] text-amber-400/90 font-mono">
+                {currentUser?.role === 'admin' ? '🛡️ Quản trị' : '📋 Quản lý'}
+              </div>
+            </div>
           </div>
           <button
             onClick={handleLogout}
-            className="p-1.5 text-slate-400 hover:text-rose-400 transition-colors"
+            className="p-1.5 text-slate-400 hover:text-rose-400 transition-colors shrink-0"
             title="Đăng xuất"
           >
             <LogOut className="w-4 h-4" />
@@ -1579,8 +1784,366 @@ export default function AdminPage() {
               </div>
             </div>
           )}
+
+          {/* ========================================================================= */}
+          {/* TAB 6: QUẢN LÝ NGƯỜI DÙNG & PHÂN QUYỀN */}
+          {/* ========================================================================= */}
+          {activeTab === 'users' && (
+            <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-5 animate-fadeIn">
+              {/* Header Tab */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Users className="w-5 h-5 text-amber-600" />
+                    <h2 className="text-base font-bold text-slate-900">Quản Lý Người Dùng & Phân Quyền</h2>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Thêm và quản lý tài khoản quản trị website với 2 cấp độ quyền hạn: <strong>Quản trị (Admin)</strong> và <strong>Quản lý (Manager)</strong>
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleOpenAddUser}
+                  className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl transition-all shadow-sm flex items-center gap-1.5 self-start sm:self-auto"
+                >
+                  <UserPlus className="w-4 h-4" />
+                  <span>Thêm Tài Khoản Mới</span>
+                </button>
+              </div>
+
+              {/* Giải thích 2 quyền hạn */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                <div className="p-3.5 bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-200 rounded-xl space-y-1">
+                  <div className="flex items-center gap-2 text-purple-900 font-bold text-xs">
+                    <Shield className="w-4 h-4 text-purple-700" />
+                    <span>Quyền: QUẢN TRỊ (Admin)</span>
+                  </div>
+                  <p className="text-[11px] text-purple-800 leading-relaxed">
+                    Toàn quyền hệ thống cao nhất: Thêm/xóa/sửa người dùng khác, đổi logo thương hiệu, chỉnh sửa thông tin donate/VietQR, cấu hình hệ thống và khôi phục cài đặt gốc.
+                  </p>
+                </div>
+
+                <div className="p-3.5 bg-gradient-to-br from-sky-50 to-blue-50 border border-sky-200 rounded-xl space-y-1">
+                  <div className="flex items-center gap-2 text-sky-900 font-bold text-xs">
+                    <UserCheck className="w-4 h-4 text-sky-700" />
+                    <span>Quyền: QUẢN LÝ (Manager)</span>
+                  </div>
+                  <p className="text-[11px] text-sky-800 leading-relaxed">
+                    Quyền vận hành & biên tập: Bật/tắt các tính năng lịch pháp, tử vi, thần số học, cập nhật banner thông báo đầu trang, xem thông tin hệ thống và hỗ trợ người dùng.
+                  </p>
+                </div>
+              </div>
+
+              {/* Search & Filter */}
+              <div className="flex items-center justify-between gap-3 pt-1">
+                <div className="relative w-full sm:w-72">
+                  <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-slate-400" />
+                  <input
+                    type="text"
+                    value={userSearch}
+                    onChange={(e) => setUserSearch(e.target.value)}
+                    placeholder="Tìm theo tên đăng nhập hoặc họ tên..."
+                    className="w-full pl-9 pr-3 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+
+                <div className="text-xs text-slate-500 font-mono">
+                  Tổng: <strong>{(config.users || []).length}</strong> tài khoản
+                </div>
+              </div>
+
+              {/* Table Users */}
+              <div className="overflow-x-auto border border-slate-200 rounded-xl">
+                <table className="w-full text-left text-xs text-slate-700">
+                  <thead className="bg-slate-50 text-[11px] text-slate-500 uppercase tracking-wider border-b border-slate-200">
+                    <tr>
+                      <th className="px-4 py-3">Tài Khoản & Người Dùng</th>
+                      <th className="px-4 py-3">Phân Quyền</th>
+                      <th className="px-4 py-3">Trạng Thái</th>
+                      <th className="px-4 py-3">Ngày Tạo</th>
+                      <th className="px-4 py-3 text-right">Thao Tác</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {(config.users || DEFAULT_APP_CONFIG.users || [])
+                      .filter((u) => {
+                        if (!userSearch.trim()) return true;
+                        const q = userSearch.toLowerCase();
+                        return (
+                          u.username.toLowerCase().includes(q) ||
+                          u.fullName.toLowerCase().includes(q)
+                        );
+                      })
+                      .map((user) => {
+                        const isRootAdmin = user.username === 'admin';
+                        const isSelf = currentUser?.id === user.id;
+
+                        return (
+                          <tr key={user.id} className="hover:bg-slate-50/80 transition-colors">
+                            <td className="px-4 py-3">
+                              <div className="flex items-center gap-2.5">
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 ${
+                                  user.role === 'admin'
+                                    ? 'bg-purple-100 text-purple-800 border border-purple-300'
+                                    : 'bg-sky-100 text-sky-800 border border-sky-300'
+                                }`}>
+                                  {user.fullName.charAt(0).toUpperCase()}
+                                </div>
+                                <div>
+                                  <div className="font-bold text-slate-900 flex items-center gap-1.5">
+                                    <span>{user.fullName}</span>
+                                    {isSelf && (
+                                      <span className="text-[10px] bg-amber-100 text-amber-900 font-bold px-1.5 py-0.2 rounded">
+                                        Bạn
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="text-[11px] font-mono text-slate-500">
+                                    @{user.username}
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+
+                            <td className="px-4 py-3">
+                              {user.role === 'admin' ? (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-purple-100 text-purple-900 border border-purple-200">
+                                  <Shield className="w-3 h-3 text-purple-700" />
+                                  <span>Quản trị (Admin)</span>
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-sky-100 text-sky-900 border border-sky-200">
+                                  <UserCheck className="w-3 h-3 text-sky-700" />
+                                  <span>Quản lý (Manager)</span>
+                                </span>
+                              )}
+                            </td>
+
+                            <td className="px-4 py-3">
+                              {user.status === 'active' ? (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                  <span>Hoạt động</span>
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                                  <span>Đã khóa</span>
+                                </span>
+                              )}
+                            </td>
+
+                            <td className="px-4 py-3 font-mono text-[11px] text-slate-500">
+                              {user.createdAt || '---'}
+                            </td>
+
+                            <td className="px-4 py-3 text-right">
+                              <div className="flex items-center justify-end gap-1.5">
+                                <button
+                                  type="button"
+                                  onClick={() => handleOpenEditUser(user)}
+                                  className="p-1.5 text-slate-600 hover:text-amber-700 hover:bg-amber-50 rounded-lg transition-colors"
+                                  title="Chỉnh sửa tài khoản"
+                                >
+                                  <Edit3 className="w-4 h-4" />
+                                </button>
+
+                                {!isRootAdmin && !isSelf && (
+                                  <>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleToggleUserStatus(user)}
+                                      className={`p-1.5 rounded-lg transition-colors ${
+                                        user.status === 'active'
+                                          ? 'text-slate-600 hover:text-amber-700 hover:bg-amber-50'
+                                          : 'text-emerald-600 hover:bg-emerald-50'
+                                      }`}
+                                      title={user.status === 'active' ? 'Khóa tài khoản' : 'Mở khóa tài khoản'}
+                                    >
+                                      {user.status === 'active' ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
+                                    </button>
+
+                                    <button
+                                      type="button"
+                                      onClick={() => handleDeleteUser(user)}
+                                      className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                                      title="Xóa tài khoản"
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </button>
+                                  </>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
         </main>
       </div>
+
+      {/* MODAL THÊM / SỬA TÀI KHOẢN NGƯỜI DÙNG */}
+      {showUserModal && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden animate-fadeIn">
+            <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+              <div className="flex items-center gap-2">
+                <Users className="w-4 h-4 text-amber-600" />
+                <h3 className="font-bold text-sm text-slate-900">
+                  {editingUser ? 'Chỉnh Sửa Tài Khoản' : 'Thêm Tài Khoản Quản Trị Mới'}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowUserModal(false)}
+                className="p-1 text-slate-400 hover:text-slate-700 rounded-lg"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveUser} className="p-4 sm:p-5 space-y-4">
+              {formError && (
+                <div className="p-2.5 bg-rose-50 border border-rose-200 rounded-lg text-xs text-rose-600 font-medium">
+                  {formError}
+                </div>
+              )}
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Tên Đăng Nhập (Username)
+                </label>
+                <input
+                  type="text"
+                  disabled={Boolean(editingUser)}
+                  value={formUsername}
+                  onChange={(e) => setFormUsername(e.target.value)}
+                  placeholder="Ví dụ: bientapvien, ketoan..."
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 font-mono focus:bg-white focus:outline-none focus:border-amber-500 disabled:opacity-60 disabled:cursor-not-allowed"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Họ và Tên / Tên Hiển Thị
+                </label>
+                <input
+                  type="text"
+                  value={formFullName}
+                  onChange={(e) => setFormFullName(e.target.value)}
+                  placeholder="Ví dụ: Nguyễn Văn A"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:bg-white focus:outline-none focus:border-amber-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Mật Khẩu {editingUser && <span className="font-normal text-slate-400">(Để trống nếu giữ nguyên)</span>}
+                </label>
+                <input
+                  type="password"
+                  value={formPassword}
+                  onChange={(e) => setFormPassword(e.target.value)}
+                  placeholder={editingUser ? '••••••••' : 'Nhập mật khẩu cho tài khoản...'}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 font-mono focus:bg-white focus:outline-none focus:border-amber-500"
+                />
+              </div>
+
+              {/* Phân quyền */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-2">
+                  Phân Quyền (Vai Trò)
+                </label>
+                <div className="grid grid-cols-2 gap-2.5">
+                  <label className={`p-3 rounded-xl border cursor-pointer flex flex-col gap-1 transition-all ${
+                    formRole === 'admin'
+                      ? 'border-purple-500 bg-purple-50/60 text-purple-950 shadow-2xs ring-1 ring-purple-400'
+                      : 'border-slate-200 hover:border-slate-300 text-slate-700'
+                  }`}>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 font-bold text-xs">
+                        <Shield className="w-3.5 h-3.5 text-purple-700" />
+                        <span>Quản trị (Admin)</span>
+                      </div>
+                      <input
+                        type="radio"
+                        name="formRole"
+                        value="admin"
+                        checked={formRole === 'admin'}
+                        onChange={() => setFormRole('admin')}
+                        className="text-purple-600"
+                      />
+                    </div>
+                    <p className="text-[10px] text-slate-500 leading-tight">
+                      Toàn quyền tối cao trong hệ thống
+                    </p>
+                  </label>
+
+                  <label className={`p-3 rounded-xl border cursor-pointer flex flex-col gap-1 transition-all ${
+                    formRole === 'manager'
+                      ? 'border-sky-500 bg-sky-50/60 text-sky-950 shadow-2xs ring-1 ring-sky-400'
+                      : 'border-slate-200 hover:border-slate-300 text-slate-700'
+                  }`}>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 font-bold text-xs">
+                        <UserCheck className="w-3.5 h-3.5 text-sky-700" />
+                        <span>Quản lý (Manager)</span>
+                      </div>
+                      <input
+                        type="radio"
+                        name="formRole"
+                        value="manager"
+                        checked={formRole === 'manager'}
+                        onChange={() => setFormRole('manager')}
+                        className="text-sky-600"
+                      />
+                    </div>
+                    <p className="text-[10px] text-slate-500 leading-tight">
+                      Quản lý nội dung & tính năng
+                    </p>
+                  </label>
+                </div>
+              </div>
+
+              {/* Trạng thái */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Trạng Thái Tài Khoản
+                </label>
+                <select
+                  value={formStatus}
+                  onChange={(e) => setFormStatus(e.target.value as any)}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs font-medium text-slate-800 focus:outline-none focus:border-amber-500"
+                >
+                  <option value="active">Hoạt Động Bình Thường</option>
+                  <option value="blocked">Tạm Khóa (Không thể đăng nhập)</option>
+                </select>
+              </div>
+
+              <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowUserModal(false)}
+                  className="px-3.5 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
+                >
+                  Hủy Bỏ
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl shadow-xs transition-colors"
+                >
+                  {editingUser ? 'Cập Nhật Tài Khoản' : 'Lưu Tài Khoản Mới'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
